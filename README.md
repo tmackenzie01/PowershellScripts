@@ -1,5 +1,7 @@
 Repository for storing my Powershell scripts
 
-They will contain...
+Located in My Documents/Powershelll/scripts
+
+Profile contains
 
 tsql commands/shortcuts for common tasks
