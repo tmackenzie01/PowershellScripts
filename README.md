@@ -1,7 +1,7 @@
-Repository for storing my Powershell scripts
+Repository for storing my Powershell scripts and profile
 
-Located in My Documents/Powershelll/scripts
+Located in C:\Users\<user>\Documents\WindowsPowerShell\
 
 Profile contains
 
-tsql commands/shortcuts for common tasks
+* tsql commands/shortcuts for common tasks
