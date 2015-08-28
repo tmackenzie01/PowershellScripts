@@ -1,0 +1,1 @@
+Set-Location C:\Users\tmackenzie01\Documents\WindowsPowerShell\scripts
