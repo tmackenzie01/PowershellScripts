@@ -7,6 +7,7 @@ Set-Alias npp ${env:ProgramFiles(x86)}\Notepad++\notepad++.exe
 function Reload-Profile() {
   # This is just . $profile, but at the moment I won't remember that
   . $profile
+  Write-Host "May not pick up changes for existing functions, try re-launching PowerShell"
 }
 
 # SQL Server functionality
@@ -30,7 +31,7 @@ function Tsql-Delete-Database() {
     Write-Host "Database VMS_DevConfig deleted"
   }
   else {
-  Write-Host "No database VMS_DevConfig deletion performed"
+    Write-Host "No database VMS_DevConfig deletion performed"
   }
 }
 
@@ -39,7 +40,18 @@ function Tsql-List-Databases() {
   $nocount = "SET NOCOUNT ON"
   # -W removes trailing spaces, -h -1 specifies no headers to be shown, https://msdn.microsoft.com/en-us/library/ms162773.aspx 
   $query = "SELECT name FROM master..sysdatabases WHERE name <> 'tempdb' AND name <> 'model' AND name <> 'msdb'"
-  sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "$nocount;$query" -W -h -1
+  $queryResults = sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "$nocount;$query" -W -h -1
+  if ($queryResults -contains "VMS_DevConfig") {
+    # Get the version number
+    $versionNumber = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM tblVersionNumber WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
+	
+	#Get the build type (case statement converts it from number to text)
+	$buildType = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT CASE WHEN build_type = 3 THEN 'GeoLog Secure' WHEN build_type = 1 THEN 'Titan Secure' WHEN build_type = 2 THEN 'Titan Standard' WHEN build_type = 4 THEN 'Insecure' ELSE 'Unknown' END FROM tblVersionNumber WHERE is_current=1" -W -h -1	
+	
+	$queryResults = "VMS_DevConfig" + " " + $versionNumber + " " + $buildType
+  }
+  
+  Write-Host $queryResults
 }
 
 function sign ($filename) {
