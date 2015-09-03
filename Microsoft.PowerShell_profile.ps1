@@ -44,6 +44,7 @@ function Tsql-List-Databases() {
   if ($queryResults -contains "VMS_DevConfig") {
     # Get the version number
     $versionNumber = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM tblVersionNumber WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
+	$versionNumber = $versionNumber -replace " ","."
 	
 	#Get the build type (case statement converts it from number to text)
 	$buildType = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT CASE WHEN build_type = 3 THEN 'GeoLog Secure' WHEN build_type = 1 THEN 'Titan Secure' WHEN build_type = 2 THEN 'Titan Standard' WHEN build_type = 4 THEN 'Insecure' ELSE 'Unknown' END FROM tblVersionNumber WHERE is_current=1" -W -h -1	
