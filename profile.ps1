@@ -1,1 +1,2 @@
-Set-Location C:\Users\tmackenzie01\Documents\WindowsPowerShell\scripts
+$mydocs = [environment]::getfolderpath("mydocuments")
+Set-Location $mydocs\WindowsPowerShell\scripts
