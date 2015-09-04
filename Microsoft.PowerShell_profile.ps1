@@ -1,4 +1,6 @@
-Write-Host "Loading profile for PowerShell" $PSVersionTable.PSVersion.Major $PSVersionTable.PSVersion.Minor
+$major = $PSVersionTable.PSVersion.Major
+$minor = $PSVersionTable.PSVersion.Minor
+Write-Host "Loading profile for PowerShell $major.$minor" 
 
 # Aliases
 Set-Alias npp ${env:ProgramFiles(x86)}\Notepad++\notepad++.exe
