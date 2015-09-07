@@ -12,6 +12,14 @@ function Reload-Profile() {
   Write-Host "May not pick up changes for existing functions, try re-launching PowerShell"
 }
 
+function Help-Me() {
+  # This is for when I forget/trying to learn stuff
+  Write-Host "To see what methods and properties an cmdlet has do this"
+  Write-Host "Get-Service | Get-Member"
+  Write-Host ""
+  Write-Host ""
+}
+
 # SQL Server functionality
 function Tsql ($query) {
   sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q $query
