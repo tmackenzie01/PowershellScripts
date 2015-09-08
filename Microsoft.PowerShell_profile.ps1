@@ -73,6 +73,12 @@ function Tsql-List-Databases() {
   Write-Host $queryResults
 }
 
+function Tsql-Tips() {
+  # Some TSQL stuff which I always forget
+  Write-Host "Get top 100 rows of a table:"
+  Write-Host "SELECT TOP 100 * FROM TABLE"  
+}
+
 function sign ($filename) {
   $cert = @(gci cert:\currentuser\My -codesign)[0]
   Set-AuthenticodeSignature $filename $cert
