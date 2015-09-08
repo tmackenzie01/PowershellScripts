@@ -30,7 +30,10 @@ function Tsql-Open-Backups() {
 }
 
 function Tsql-Restore-Backup ($backup) {
-  sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "RESTORE DATABASE VMS_DevConfig FROM DISK = '$backup'"
+  # If the backup is an old version that stored the ldf & mdf in Program Files then we need to explicitly move it to C:\ProgramData\Titan\Database
+  # SQL Server Server Management Studio does this bit automatically under the bonnet!
+  $move = "WITH MOVE 'VMS_DevConfig_dat' TO 'C:\ProgramData\Titan\Database\VMS_DevConfig.mdf', MOVE 'VMS_DevConfig_log' TO 'C:\ProgramData\Titan\Database\VMS_DevConfig.ldf'"
+  sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "RESTORE DATABASE VMS_DevConfig FROM DISK = '$backup' $move"
 }
 
 function Tsql-Delete-Database() {
