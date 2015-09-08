@@ -30,7 +30,10 @@ function Tsql-Open-Backups() {
 }
 
 function Tsql-Restore-Backup ($backup) {
-  sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "RESTORE DATABASE VMS_DevConfig FROM DISK = '$backup'"
+  # If the backup is an old version that stored the ldf & mdf in Program Files then we need to explicitly move it to C:\ProgramData\Titan\Database
+  # SQL Server Server Management Studio does this bit automatically under the bonnet!
+  $move = "WITH MOVE 'VMS_DevConfig_dat' TO 'C:\ProgramData\Titan\Database\VMS_DevConfig.mdf', MOVE 'VMS_DevConfig_log' TO 'C:\ProgramData\Titan\Database\VMS_DevConfig.ldf'"
+  sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "RESTORE DATABASE VMS_DevConfig FROM DISK = '$backup' $move"
 }
 
 function Tsql-Delete-Database() {
@@ -56,13 +59,24 @@ function Tsql-List-Databases() {
     $versionNumber = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM tblVersionNumber WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
 	$versionNumber = $versionNumber -replace " ","."
 	
-	#Get the build type (case statement converts it from number to text)
-	$buildType = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT CASE WHEN build_type = 3 THEN 'GeoLog Secure' WHEN build_type = 1 THEN 'Titan Secure' WHEN build_type = 2 THEN 'Titan Standard' WHEN build_type = 4 THEN 'Insecure' ELSE 'Unknown' END FROM tblVersionNumber WHERE is_current=1" -W -h -1	
+	# Confirm we are looking at a database which has the build_type (introduced in 6.18)
+	$buildTypeExists = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "IF COL_LENGTH('tblVersionNumber','build_type') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
+	if ($buildTypeExists -eq "EXISTS") {
+	  #Get the build type (case statement converts it from number to text)
+      $buildType = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT CASE WHEN build_type = 3 THEN 'GeoLog Secure' WHEN build_type = 1 THEN 'Titan Secure' WHEN build_type = 2 THEN 'Titan Standard' WHEN build_type = 4 THEN 'Insecure' ELSE 'Unknown' END FROM tblVersionNumber WHERE is_current=1" -W -h -1	
+    }
+	  
 	$queryResults = "VMS_DevConfig" + " " + $versionNumber + " " + $buildType
   }
   
   Write-Host $queryResults
+}
+
+function Tsql-Tips() {
+  # Some TSQL stuff which I always forget
+  Write-Host "Get top 100 rows of a table:"
+  Write-Host "SELECT TOP 100 * FROM TABLE"  
 }
 
 function sign ($filename) {
