@@ -1,6 +1,6 @@
 Repository for storing my Powershell scripts and profile
 
-Located in C:\Users\<user>\Documents\WindowsPowerShell\
+Located in C:\Users\Username\Documents\WindowsPowerShell\
 
 Profile contains
 
