@@ -6,7 +6,8 @@ Write-Host "Loading profile for PowerShell $major.$minor"
 Set-Alias npp ${env:ProgramFiles(x86)}\Notepad++\notepad++.exe
 
 # Global variables
-$tsqlAutomaticBackupLocation = "C:\Users\tmackenzie01\Documents\Customer DBs\Automatic backups"
+$tsqlBackupsLocation = "$mydocs\Customer DBs"
+$tsqlAutomaticBackupLocation = "$tsqlBackupsLocation\Automatic backups"
 
 # Reload profile
 function Reload-Profile() {
@@ -29,7 +30,7 @@ function Tsql ($query) {
 }
 
 function Tsql-Open-Backups() {
-  explorer "C:\Users\tmackenzie01\Documents\Customer DBs"
+  explorer $tsqlBackupsLocation
 }
 
 function Tsql-Restore-Backup ($backup) {
