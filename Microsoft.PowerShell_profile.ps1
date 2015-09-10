@@ -34,10 +34,55 @@ function Tsql-Open-Backups() {
 }
 
 function Tsql-Restore-Backup ($backup) {
-  # If the backup is an old version that stored the ldf & mdf in Program Files then we need to explicitly move it to C:\ProgramData\Titan\Database
-  # SQL Server Server Management Studio does this bit automatically under the bonnet!
-  $move = "WITH MOVE 'VMS_DevConfig_dat' TO 'C:\ProgramData\Titan\Database\VMS_DevConfig.mdf', MOVE 'VMS_DevConfig_log' TO 'C:\ProgramData\Titan\Database\VMS_DevConfig.ldf'"
-  sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "RESTORE DATABASE VMS_DevConfig FROM DISK = '$backup' $move"
+  $performRestore = $TRUE # Could just use $backup and check for null/empty, but good to have a boolean example in here
+  $reason = ""
+  
+  # Check if database exists, don't restore if already exists
+  if (!($queryResults -contains "VMS_DevConfig")) {
+    # If no parameter is passed in then look at the automatic backups
+	if ([string]::IsNullOrEmpty($backup)) {
+	  # No backup file supplied, list the most recent backups in the automatic backup folder
+      # prompt which one (by number) to restore
+	  Write-Host "Select a backup"
+      $files = Get-ChildItem -Path $tsqlAutomaticBackupLocation | Sort-Object LastWriteTime -descending | Select-Object -first 10
+	  [int]$fileCount = 1
+      ForEach ($f in $files) {
+	    Write-Host "$fileCount $f"
+		$fileCount++
+	  }
+	  $filesLength = $files.Length
+      [int]$val = Read-Host "Enter 1 to $filesLength to restore most recent backup" # Add error handling for non-ints later
+	  
+      if (($val -ge 1) -and ($val -le $filesLength)) {
+        $file = $files[$val - 1]
+        $backup = "$tsqlAutomaticBackupLocation\" + $file.Name
+		$performRestore = $TRUE
+      }
+      else {
+        $reason = "no valid backup selected"
+		$performRestore = $FALSE
+      }
+	}
+  }
+  else {
+    $reason = "database already exists - delete it first"
+	$performRestore = $FALSE
+  }
+  
+  if ($performRestore -eq $TRUE) {
+    Write-Host "Restoring " $backup
+    	
+    # If the backup is an old version that stored the ldf & mdf in Program Files then we need to explicitly move it to C:\ProgramData\Titan\Database
+    # SQL Server Server Management Studio does this bit automatically under the bonnet!
+	
+    $query = "SELECT name FROM master..sysdatabases WHERE name <> 'tempdb' AND name <> 'model' AND name <> 'msdb'"
+    $queryResults = sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "$nocount;$query" -W -h -1
+    $move = "WITH MOVE 'VMS_DevConfig_dat' TO 'C:\ProgramData\Titan\Database\VMS_DevConfig.mdf', MOVE 'VMS_DevConfig_log' TO 'C:\ProgramData\Titan\Database\VMS_DevConfig.ldf'"
+    sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "RESTORE DATABASE VMS_DevConfig FROM DISK = '$backup' $move"
+  }
+  else {
+    Write-Host "Restore not performed, $reason"
+  }
 }
 
 function Tsql-Delete-Database() {
@@ -81,26 +126,15 @@ function Tsql-Backup-Database() {
   # backup up database to a folder called automatic backups
   # do not delete the database, this must be done manually
   $date = Get-Date -format yyyyMMdd_HHmmss
-  $backupLocation = "$tsqlAutomaticBackupLocation\VMS_DevConfig_$date.bak"
+  $versionNumber = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM tblVersionNumber WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
+  $versionNumber = $versionNumber -replace " ","."
+  $tag = $versionNumber + "_" + $date
+  
+  $backupFile = "VMS_DevConfig_$tag.bak"
+  $backupLocation = "$tsqlAutomaticBackupLocation\$backupFile"
   $backUpName = "VMS_DevConfig backup"
+  Write-Host "Backing up to $backupFile"
   Tsql "BACKUP DATABASE VMS_DevConfig TO DISK = '$backupLocation' WITH FORMAT, MEDIANAME = 'MyBackups', NAME = '$backupName'"
-}
-
-function Tsql-Restore-Automatic-Backup-Database() {
-  # Confirm no database is present
-  # list the most recent backups in the automatic backup folder
-  # prompt which one (by number) to restore
-  # restore it
-  $val = Read-Host "Enter (1) to restore most recent backup"
-  if ($val -eq "1") {
-    $file = Get-ChildItem -Path $tsqlAutomaticBackupLocation | Sort-Object LastWriteTime -descending | Select-Object -first 1
-	Write-Host "Restoring " $file.Name
-	$backupFile = "$tsqlAutomaticBackupLocation\" + $file.Name
-    Tsql-Restore-Backup $backupFile
-  }
-  else {
-    Write-Host "Unknown option"
-  }
 }
 
 function Tsql-Tips() {
