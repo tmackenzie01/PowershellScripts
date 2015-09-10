@@ -5,6 +5,9 @@ Write-Host "Loading profile for PowerShell $major.$minor"
 # Aliases
 Set-Alias npp ${env:ProgramFiles(x86)}\Notepad++\notepad++.exe
 
+# Global variables
+$tsqlAutomaticBackupLocation = "C:\Users\tmackenzie01\Documents\Customer DBs\Automatic backups"
+
 # Reload profile
 function Reload-Profile() {
   # This is just . $profile, but at the moment I won't remember that
@@ -71,6 +74,32 @@ function Tsql-List-Databases() {
   }
   
   Write-Host $queryResults
+}
+
+function Tsql-Backup-Database() {
+  # backup up database to a folder called automatic backups
+  # do not delete the database, this must be done manually
+  $date = Get-Date -format yyyyMMdd_HHmmss
+  $backupLocation = "$tsqlAutomaticBackupLocation\VMS_DevConfig_$date.bak"
+  $backUpName = "VMS_DevConfig backup"
+  Tsql "BACKUP DATABASE VMS_DevConfig TO DISK = '$backupLocation' WITH FORMAT, MEDIANAME = 'MyBackups', NAME = '$backupName'"
+}
+
+function Tsql-Restore-Automatic-Backup-Database() {
+  # Confirm no database is present
+  # list the most recent backups in the automatic backup folder
+  # prompt which one (by number) to restore
+  # restore it
+  $val = Read-Host "Enter (1) to restore most recent backup"
+  if ($val -eq "1") {
+    $file = Get-ChildItem -Path $tsqlAutomaticBackupLocation | Sort-Object LastWriteTime -descending | Select-Object -first 1
+	Write-Host "Restoring " $file.Name
+	$backupFile = "$tsqlAutomaticBackupLocation\" + $file.Name
+    Tsql-Restore-Backup $backupFile
+  }
+  else {
+    Write-Host "Unknown option"
+  }
 }
 
 function Tsql-Tips() {
