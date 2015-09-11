@@ -6,6 +6,7 @@ Write-Host "Loading profile for PowerShell $major.$minor"
 Set-Alias npp ${env:ProgramFiles(x86)}\Notepad++\notepad++.exe
 Set-Alias ILMerge ${env:ProgramFiles(x86)}\Microsoft\ILMerge\ILMerge.exe
 Set-Alias ildasm "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\ildasm.exe"
+Set-Alias nuget "${env:ProgramFiles(x86)}\Nuget\nuget.exe"
 
 # Global variables
 $tsqlBackupsLocation = "$mydocs\Customer DBs"
