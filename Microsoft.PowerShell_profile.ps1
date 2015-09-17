@@ -11,6 +11,7 @@ Set-Alias nuget "${env:ProgramFiles(x86)}\Nuget\nuget.exe"
 # Global variables
 $tsqlBackupsLocation = "$mydocs\Customer DBs"
 $tsqlAutomaticBackupLocation = "$tsqlBackupsLocation\Automatic backups"
+$tsqlDemoRoomBackupLocation = "$tsqlBackupsLocation\Demo Room"
 
 # Reload profile
 function Reload-Profile() {
@@ -86,6 +87,11 @@ function Tsql-Restore-Backup ($backup) {
   else {
     Write-Host "Restore not performed, $reason"
   }
+}
+
+function Tsql-Restore-Backup-Demo () {
+  Write-Host "Restoring latest demo room backup from $tsqlDemoRoomBackupLocation"
+  # come back later
 }
 
 function Tsql-Delete-Database() {
