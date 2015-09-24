@@ -12,6 +12,7 @@ Set-Alias nuget "${env:ProgramFiles(x86)}\Nuget\nuget.exe"
 $tsqlBackupsLocation = "$mydocs\Customer DBs"
 $tsqlAutomaticBackupLocation = "$tsqlBackupsLocation\Automatic backups"
 $tsqlDemoRoomBackupLocation = "$tsqlBackupsLocation\Demo Room"
+$pcName = "$env:computername"
 
 # Reload profile
 function Reload-Profile() {
@@ -30,7 +31,7 @@ function Help-Me() {
 
 # SQL Server functionality
 function Tsql ($query) {
-  sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q $query
+  sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q $query
 }
 
 function Tsql-Open-Backups() {
@@ -80,9 +81,9 @@ function Tsql-Restore-Backup ($backup) {
     # SQL Server Server Management Studio does this bit automatically under the bonnet!
 	
     $query = "SELECT name FROM master..sysdatabases WHERE name <> 'tempdb' AND name <> 'model' AND name <> 'msdb'"
-    $queryResults = sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "$nocount;$query" -W -h -1
+    $queryResults = sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "$nocount;$query" -W -h -1
     $move = "WITH MOVE 'VMS_DevConfig_dat' TO 'C:\ProgramData\Titan\Database\VMS_DevConfig.mdf', MOVE 'VMS_DevConfig_log' TO 'C:\ProgramData\Titan\Database\VMS_DevConfig.ldf'"
-    sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "RESTORE DATABASE VMS_DevConfig FROM DISK = '$backup' $move"
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "RESTORE DATABASE VMS_DevConfig FROM DISK = '$backup' $move"
   }
   else {
     Write-Host "Restore not performed, $reason"
@@ -98,7 +99,7 @@ function Tsql-Delete-Database() {
   $confirmation = Read-Host "This will delete VMS_DevConfig, do you want to continue? (y/n)"
   If ($confirmation -Match 'y') {
     Write-Host "Database VMS_DevConfig deletion in progress ..."
-    sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "DROP DATABASE VMS_DevConfig"
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "DROP DATABASE VMS_DevConfig"
     Write-Host "Database VMS_DevConfig deleted"
   }
   else {
@@ -111,18 +112,18 @@ function Tsql-List-Databases() {
   $nocount = "SET NOCOUNT ON"
   # -W removes trailing spaces, -h -1 specifies no headers to be shown, https://msdn.microsoft.com/en-us/library/ms162773.aspx 
   $query = "SELECT name FROM master..sysdatabases WHERE name <> 'tempdb' AND name <> 'model' AND name <> 'msdb'"
-  $queryResults = sqlcmd -S 127.0.0.1\SQLEXPRESS -Q "$nocount;$query" -W -h -1
+  $queryResults = sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "$nocount;$query" -W -h -1
   if ($queryResults -contains "VMS_DevConfig") {
     # Get the version number
-    $versionNumber = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM tblVersionNumber WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
+    $versionNumber = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM tblVersionNumber WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
 	$versionNumber = $versionNumber -replace " ","."
 	
 	# Confirm we are looking at a database which has the build_type (introduced in 6.18)
-	$buildTypeExists = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "IF COL_LENGTH('tblVersionNumber','build_type') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	$buildTypeExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "IF COL_LENGTH('tblVersionNumber','build_type') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
 	if ($buildTypeExists -eq "EXISTS") {
 	  #Get the build type (case statement converts it from number to text)
-      $buildType = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT CASE WHEN build_type = 3 THEN 'GeoLog Secure' WHEN build_type = 1 THEN 'Titan Secure' WHEN build_type = 2 THEN 'Titan Standard' WHEN build_type = 4 THEN 'Insecure' ELSE 'Unknown' END FROM tblVersionNumber WHERE is_current=1" -W -h -1	
+      $buildType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT CASE WHEN build_type = 3 THEN 'GeoLog Secure' WHEN build_type = 1 THEN 'Titan Secure' WHEN build_type = 2 THEN 'Titan Standard' WHEN build_type = 4 THEN 'Insecure' ELSE 'Unknown' END FROM tblVersionNumber WHERE is_current=1" -W -h -1	
     }
 	  
 	$queryResults = "VMS_DevConfig" + " " + $versionNumber + " " + $buildType
@@ -135,7 +136,7 @@ function Tsql-Backup-Database() {
   # backup up database to a folder called automatic backups
   # do not delete the database, this must be done manually
   $date = Get-Date -format yyyyMMdd_HHmmss
-  $versionNumber = sqlcmd -S 127.0.0.1\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM tblVersionNumber WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
+  $versionNumber = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM tblVersionNumber WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
   $versionNumber = $versionNumber -replace " ","."
   $tag = $versionNumber + "_" + $date
   
