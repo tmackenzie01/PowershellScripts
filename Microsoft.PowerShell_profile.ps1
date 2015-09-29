@@ -8,6 +8,7 @@ Set-Alias ILMerge ${env:ProgramFiles(x86)}\Microsoft\ILMerge\ILMerge.exe
 Set-Alias ildasm "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\ildasm.exe"
 Set-Alias nuget "${env:ProgramFiles(x86)}\Nuget\nuget.exe"
 Set-Alias mstest "${env:ProgramFiles(x86)}\Microsoft Visual Studio 14.0\Common7\IDE\MSTest.exe"
+Set-Alias ffmpeg "${env:ProgramFiles(x86)}\ffmpeg\bin\ffmpeg.exe"
 
 # Global variables
 $tsqlBackupsLocation = "$mydocs\Customer DBs"
@@ -152,6 +153,19 @@ function Tsql-Tips() {
   # Some TSQL stuff which I always forget
   Write-Host "Get top 100 rows of a table:"
   Write-Host "SELECT TOP 100 * FROM TABLE"  
+}
+
+function ffmpeg-capture-rtsp($rtspPath, $outputFile) {
+  if ([string]::IsNullOrEmpty($rtspPath)) {
+    Write-Host "Specify 1st param RTSP path"
+  }
+  
+  if ([string]::IsNullOrEmpty($outputFile)) {
+    Write-Host "Specify 2nd param output file"
+  }
+  
+  #ffmpeg -t 00:00:30 -f rtsp -i rtsp://172.16.2.69:554/axis-media/media.amp -an -pass 1 -vcodec libx264 -b 180000 -bt 180000 -threads 0 -y outfile.mp4
+  ffmpeg -t 00:00:30 -f rtsp -i $rtspPath -an -pass 1 -vcodec libx264 -b 180000 -bt 180000 -threads 0 -y $outputFile
 }
 
 function sign ($filename) {
