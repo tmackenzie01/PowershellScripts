@@ -157,7 +157,7 @@ function Tsql-Tips() {
 
 function ffmpeg-capture-rtsp($rtspPath, $outputFile) {
   if ([string]::IsNullOrEmpty($rtspPath)) {
-    Write-Host "Specify 1st param RTSP path"
+    Write-Host "Specify 1st param RTSP path, for example - rtsp://172.16.2.69:554/axis-media/media.amp"
   }
   
   if ([string]::IsNullOrEmpty($outputFile)) {
