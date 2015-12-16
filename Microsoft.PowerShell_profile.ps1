@@ -35,6 +35,9 @@ function Help-Me() {
 function Tsql ($query) {
   sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q $query
 }
+function Tsql-Show-Tables ($query) {
+  sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name"
+}
 
 function Tsql-Open-Backups() {
   explorer $tsqlBackupsLocation
