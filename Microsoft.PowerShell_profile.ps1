@@ -161,6 +161,35 @@ function Tsql-Tips() {
   Write-Host "SELECT TOP 100 * FROM TABLE"  
 }
 
+function Set-OEM($name, $val) {
+  if ([string]::IsNullOrEmpty($name)) {
+    Write-Host "Missing subkey T****"
+  }
+  else {  
+    if ([string]::IsNullOrEmpty($val)) {
+      Write-Host "Missing value (2-7)"
+    }
+	else {
+      Try {
+	    switch ($val) {
+		  "2" {Write-Host "Setting OEM to normal"}
+		  "3" {Write-Host "Setting OEM to El"}
+		  "4" {Write-Host "Setting OEM to B"}
+		  "5" {Write-Host "Setting OEM to WS"}
+		  "6" {Write-Host "Setting OEM to N"}
+		  "7" {Write-Host "Setting OEM to A"}
+		  default {Write-Host "Unsupported OEM value"}
+		}
+
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Wow6432Node\$name\All -Name OEM -Value $val
+		}
+      Catch [System.OutOfMemoryException] {
+	    Write-Host "Permissions failed"
+	  }
+	  }
+  }
+}
+
 function ffmpeg-capture-rtsp($rtspPath, $outputFile) {
   if ([string]::IsNullOrEmpty($rtspPath)) {
     Write-Host "Specify 1st param RTSP path, for example - rtsp://172.16.2.69:554/axis-media/media.amp"
