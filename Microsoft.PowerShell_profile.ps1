@@ -170,7 +170,8 @@ function Get-OEM($name) {
 	$oemValue = $currentOEM.OEM
 	$oemHint = ""
     switch ($oemValue) {
-      "2" {$oemHint = "normal"}
+      "1" {$oemHint = "normal"}
+      "2" {$oemHint = "Ge - only if Secure"}
       "3" {$oemHint = "El"}
       "4" {$oemHint = "B"}
       "5" {$oemHint = "WS"}
@@ -188,7 +189,7 @@ function Set-OEM($name, $val) {
   }
   else {  
     if ([string]::IsNullOrEmpty($val)) {
-      Write-Host "Missing value (2-7)"
+      Write-Host "Missing subkey T**** and/or value (1-7)"
     }
 	else {
       Set-ItemProperty -Path HKLM:\SOFTWARE\Wow6432Node\$name\All -Name OEM -Value $val
