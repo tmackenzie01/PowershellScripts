@@ -211,6 +211,21 @@ function ffmpeg-capture-rtsp($rtspPath, $outputFile) {
   ffmpeg -t 00:00:30 -f rtsp -i $rtspPath -an -pass 1 -vcodec libx264 -b 180000 -bt 180000 -threads 0 -y $outputFile
 }
 
+function Synergy-Log($rowCount) {
+  if ([string]::IsNullOrEmpty($rowCount)) {
+    $rowCount = 30
+  }
+  $logFilename = "C:\Program Files\Synergy\synergyd.log"
+  Write-Host "Last $rowCount lines from $logFilename ..."
+  Get-Content $logFilename | Where-Object { $_ -ne '' } | Select -Last $rowCount
+}
+
+function Synergy-Restart() {
+  Restart-Service Synergy
+  Write-Host ""
+  Synergy-Log
+}
+
 function sign ($filename) {
   $cert = @(gci cert:\currentuser\My -codesign)[0]
   Set-AuthenticodeSignature $filename $cert
