@@ -226,6 +226,29 @@ function Synergy-Restart() {
   Synergy-Log
 }
 
+function BareTail($log) {
+  $bareTailExe = "${env:ProgramFiles(x86)}\BareTail\baretail.exe"
+  # Could have made this just an alias but wanted to have -RFS and -Synergy arguments
+  if ([string]::IsNullOrEmpty($log)) {
+    & $bareTailExe
+  }
+  else {
+    if ($log -Match 'RFS') {
+	  $rfsLogsPath = "${env:ALLUSERSPROFILE}\Titan\Logs\RFS"
+	  $rfsLogs = Get-ChildItem -Path $rfsLogsPath | Sort-Object LastWriteTime -descending | Select-Object -first 10
+	  Write-Host $rfsLogs[0]
+	  $firstLog = $rfsLogsPath + "\" + $rfsLogs[0]
+	  Write-Host "Opening " $firstLog "..."
+      & $bareTailExe $firstLog
+	}
+	else {
+	  if ($log -Match 'Synergy') {
+	    & $bareTailExe "C:\Program Files\Synergy\synergyd.log"
+      }
+	}
+  }
+}
+
 function sign ($filename) {
   $cert = @(gci cert:\currentuser\My -codesign)[0]
   Set-AuthenticodeSignature $filename $cert
