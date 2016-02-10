@@ -1,21 +1,23 @@
 # http://www.hanselman.com/blog/SigningPowerShellScripts.aspx
 # Set-AuthenticodeSignature .\test.ps1 @(Get-ChildItem cert:\CurrentUser\My -codesign)[0]
-$source = "C:\CodeSandbox\moxaSSL\VMSControl_moxaSSL\source\VMSControl\bin\Debug\VMSControl.dll",
-			"C:\CodeSandbox\moxaSSL\TitanVision_moxaSSL\source\remotinglayer\commstypes\bin\Debug\CommsTypes.dll",
-			"C:\CodeSandbox\moxaSSL\TitanVision_moxaSSL\source\VisionCommon\bin\Debug\VisionCommon.dll",
-			"C:\CodeSandbox\moxaSSL\TitanVision_moxaSSL\source\TitanCommon\bin\Debug\TitanCommon.dll"
+$codeRootFolder = "C:\CodeSandbox"
+$sources = "$codeRootFolder\VMSColdstore_clean\source\VMSColdstore\bin\Debug\VMSColdstore.dll",
+			"$codeRootFolder\VMSColdstore_clean\source\VMSColdstore\bin\Debug\VMSColdstoreNetApi.dll",
+			"$codeRootFolder\VMSColdstore_clean\source\VMSColdstore\bin\Debug\VMSTrinity.dll"
 			
-$repos = "VMSControl", "TitanVision", "AdminTool"
+$repos = "TitanRecorder_trunk", "TitanVision_clean"
 
-ForEach ($source in $source)
+Write-Host "About to copy"$sources.length"items"
+ForEach ($source in $sources)
 {
 	Write-Host "Copying $source ..."
 	ForEach ($repo in $repos)
 	{
-		$dllFolder = "C:\CodeSandbox\moxaSSL\${repo}_moxaSSL\Dependencies_svn\dlls\internal"
+		$dllFolder = "$codeRootFolder\${repo}\Dependencies_svn\dlls\internal"
+		Write-Host "   to $repo ..."
 		Copy-Item $source $dllFolder
 	}
-	Copy-Item $source "C:\CodeSandbox\moxaSSL"
+	Copy-Item $source "$codeRootFolder"
 }
 
 # SIG # Begin signature block
