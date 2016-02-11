@@ -1,23 +1,27 @@
 # http://www.hanselman.com/blog/SigningPowerShellScripts.aspx
 # Set-AuthenticodeSignature .\test.ps1 @(Get-ChildItem cert:\CurrentUser\My -codesign)[0]
 $codeRootFolder = "C:\CodeSandbox"
-$sources = "$codeRootFolder\VMSColdstore_clean\source\VMSColdstore\bin\Debug\VMSColdstore.dll",
+$sourceDlls = "$codeRootFolder\VMSColdstore_clean\source\VMSColdstore\bin\Debug\VMSColdstore.dll",
 			"$codeRootFolder\VMSColdstore_clean\source\VMSColdstore\bin\Debug\VMSColdstoreNetApi.dll",
-			"$codeRootFolder\VMSColdstore_clean\source\VMSColdstore\bin\Debug\VMSTrinity.dll"
+			"$codeRootFolder\VMSColdstore_clean\source\VMSColdstore\bin\Debug\VMSTrinity.dll",
+			"$codeRootFolder\VMSComms_trunk\source\VMSCommsTCP\bin\Debug\VMSCommsTCP.dll",
+			"$codeRootFolder\VMSComms_trunk\source\VMSCommsSSL\bin\Debug\VMSCommsSSL.dll"
 			
-$repos = "TitanRecorder_trunk", "TitanVision_clean"
+$repos = "TitanRecorder_trunk", "TitanRecorder_clean", "TitanVision_clean"
 
-Write-Host "About to copy"$sources.length"items"
-ForEach ($source in $sources)
+Write-Host "About to copy"$sourceDlls.length"items"
+ForEach ($sourceDll in $sourceDlls)
 {
 	Write-Host "Copying $source ..."
 	ForEach ($repo in $repos)
 	{
 		$dllFolder = "$codeRootFolder\${repo}\Dependencies_svn\dlls\internal"
 		Write-Host "   to $repo ..."
-		Copy-Item $source $dllFolder
+		Copy-Item $sourceDll $dllFolder
+		$sourcePdb = $sourceDll -replace ".dll",".pdb"
+		Copy-Item $sourcePdb $dllFolder
 	}
-	Copy-Item $source "$codeRootFolder"
+	Copy-Item $sourceDll "$codeRootFolder"
 }
 
 # SIG # Begin signature block
