@@ -249,6 +249,12 @@ function BareTail($log) {
   }
 }
 
+function CapturePreviousOutput() {
+  $tempFile = [io.path]::GetTempFileName() 
+  Invoke-History >> $tempFile
+  npp $tempFile
+}
+
 function sign ($filename) {
   $cert = @(gci cert:\currentuser\My -codesign)[0]
   Set-AuthenticodeSignature $filename $cert
