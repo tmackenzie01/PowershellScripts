@@ -255,6 +255,11 @@ function CapturePreviousOutput() {
   npp $tempFile
 }
 
+function CapturePreviousCommand() {
+  $prev = (Get-History)[-1].CommandLine
+  Write-Host "Previous:" $prev
+  $prev | clip
+}
 function sign ($filename) {
   $cert = @(gci cert:\currentuser\My -codesign)[0]
   Set-AuthenticodeSignature $filename $cert
