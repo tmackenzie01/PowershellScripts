@@ -132,9 +132,19 @@ function Tsql-List-Databases() {
 	if ($buildTypeExists -eq "EXISTS") {
 	  #Get the build type (case statement converts it from number to text)
       $buildType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT CASE WHEN build_type = 3 THEN 'GeoLog Secure' WHEN build_type = 1 THEN 'Titan Secure' WHEN build_type = 2 THEN 'Titan Standard' WHEN build_type = 4 THEN 'Insecure' ELSE 'Unknown' END FROM tblVersionNumber WHERE is_current=1" -W -h -1	
+	  $buildType = " $buildType"
+    }
+	
+	# Get the migration state as well (introduced in 6.25)
+	$migrationStageExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "IF COL_LENGTH('tblVersionNumber','mediaMigrationStage') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	
+	if ($migrationStageExists -eq "EXISTS") {
+	  #Get the build type (case statement converts it from number to text)
+      $migrationStage = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT mediaMigrationStage FROM tblVersionNumber WHERE is_current=1" -W -h -1	
+	  $migrationStageText = " (migration stage : $migrationStage)"
     }
 	  
-	$queryResults = "VMS_DevConfig" + " " + $versionNumber + " " + $buildType
+	$queryResults = "VMS_DevConfig" + " " + $versionNumber + $buildType + $migrationStageText 
   }
   
   Write-Host $queryResults
