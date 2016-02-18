@@ -12,7 +12,7 @@ $repos = "TitanRecorder_trunk", "TitanRecorder_clean", "TitanVision_clean"
 Write-Host "About to copy"$sourceDlls.length"items"
 ForEach ($sourceDll in $sourceDlls)
 {
-	Write-Host "Copying $source ..."
+	Write-Host "Copying $sourceDll ..."
 	ForEach ($repo in $repos)
 	{
 		$dllFolder = "$codeRootFolder\${repo}\Dependencies_svn\dlls\internal"
