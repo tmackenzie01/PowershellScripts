@@ -141,13 +141,38 @@ function Tsql-List-Databases() {
 	if ($migrationStageExists -eq "EXISTS") {
 	  #Get the build type (case statement converts it from number to text)
       $migrationStage = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT mediaMigrationStage FROM tblVersionNumber WHERE is_current=1" -W -h -1	
-	  $migrationStageText = " (migration stage : $migrationStage)"
+	  $migrationStageText = " (migration stage $migrationStage)"
     }
 	  
 	$queryResults = "VMS_DevConfig" + " " + $versionNumber + $buildType + $migrationStageText 
+	
+	$hardwareCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblHardware" -W -h -1
+	$stationCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblVStation" -W -h -1
+	$alarmCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblAlarm" -W -h -1
+	$alarmActionCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblAlarmAction" -W -h -1
+	$summaryText1 = "$hardwareCount devices, $stationCount clients, $alarmCount alarms ($alarmActionCount actions)"
+	
+	$cameraCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblCamera" -W -h -1
+	$codecCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblCodec" -W -h -1
+	$panelCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblAlarmPanel" -W -h -1
+	$zoneCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblZone" -W -h -1
+	$summaryText2 = "$cameraCount cameras, $codecCount codecs, $panelCount panels ($zoneCount zones)"
+	
+	$mapCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblMap" -W -h -1
+	$mapObjectCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblMapObject" -W -h -1
+	$summaryText3 = "$mapCount maps, $mapObjectCount map objects"
+	
+	$auditCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblAuditServer" -W -h -1
+	$summaryText4 = "$auditCount audit rows"
   }
   
+  Write-Host ""
   Write-Host $queryResults
+  Write-Host ""
+  Write-Host $summaryText1
+  Write-Host $summaryText2
+  Write-Host $summaryText3
+  Write-Host $summaryText4
 }
 
 function Tsql-Backup-Database() {
