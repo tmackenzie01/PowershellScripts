@@ -15,6 +15,7 @@ $tsqlBackupsLocation = "$mydocs\Customer DBs"
 $tsqlAutomaticBackupLocation = "$tsqlBackupsLocation\Automatic backups"
 $tsqlDemoRoomBackupLocation = "$tsqlBackupsLocation\Demo Room"
 $pcName = "$env:computername"
+$powershellIncludeDirectory = "${env:ProgramData}\WindowsPowerShell includes"
 
 # Reload profile
 function Reload-Profile() {
