@@ -11,7 +11,8 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
   $destSplit = $dest.Split("_");
   
   $project = $sourceSplit[0]
-  $dest = "$rootFolder\$dest\Dependencies\dlls\internal"
+  Write-Host "Copy $project dlls to $dest ..."
+  $dest = "$rootFolder\$dest\Dependencies_svn\dlls\internal"
   $json = Get-Content "$powershellIncludeDirectory\CodeComponents.json"
   $ser = New-Object System.Web.Script.Serialization.JavaScriptSerializer
   $obj = $ser.DeserializeObject($json)
@@ -20,8 +21,13 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
     if ($dll.dll) {
       $dllFile = $dll.dll
       $dllPath = $dll.path
-	  $dllPath = "$rootFolder\$project\source\$dllPath"
-      Write-Host "Copy $dllFile from $dllPath\$dllFile to $dest"
+	  $dllPath = "$rootFolder\$source\source\$dllPath"
+	  $sourceDll = "$dllPath\$dllFile"
+	  $dllFolder = $dest
+      Write-Host "$sourceDll -> $dllFolder"
+      Copy-Item $sourceDll $dllFolder
+      $sourcePdb = $sourceDll -replace ".dll",".pdb"
+      Copy-Item $sourcePdb $dllFolder
     }
     else {
       Write-Host "Project dlls for $project not recognised"
@@ -29,8 +35,14 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
   }
 }
 
-CopyDlls -rootFolder "C:\Development\Code" -source 'V1_trunk' -dest "A_trunk"
+$sourceRepos = "V1_trunk"
+$destRepos = "V2_trunk"
 
+foreach ($sourceRepo in $sourceRepos) {
+  foreach ($destRepo in $destRepos) {
+    CopyDlls -rootFolder "C:\CodeSandbox" -source "$sourceRepo" -dest "$destRepo"
+  }
+}
 
 
 #######################################################
