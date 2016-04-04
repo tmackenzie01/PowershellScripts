@@ -17,6 +17,25 @@ $tsqlDemoRoomBackupLocation = "$tsqlBackupsLocation\Demo Room"
 $pcName = "$env:computername"
 $powershellIncludeDirectory = "${env:ProgramData}\WindowsPowerShell includes"
 
+# Dependencies
+Write-Host "Loading dependencies..."
+[System.Reflection.Assembly]::LoadWithPartialName("System.Web.Extensions") > $null
+
+# Load data
+Write-Host "Loading data..."
+if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
+  # Load db info
+  if (([System.IO.File]::Exists("$powershellIncludeDirectory\DatabaseInfo.json"))) {
+    Write-Host "Loading data..."
+    $dbInfoJson = Get-Content "$powershellIncludeDirectory\DatabaseInfo.json"
+    $jsonSerializer = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+    $dbInfo = $jsonSerializer.DeserializeObject($dbInfoJson)
+  }
+  else {
+    Write-Host "Db info not found"
+  }
+}
+
 # Reload profile
 function Reload-Profile() {
   # This is just . $profile, but at the moment I won't remember that
