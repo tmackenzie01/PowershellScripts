@@ -129,6 +129,16 @@ function Tsql-Delete-Database() {
     Write-Host "Database VMS_DevConfig deletion in progress ..."
     sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "DROP DATABASE VMS_DevConfig"
     Write-Host "Database VMS_DevConfig deleted"
+	
+	# Check if mdf or ldf still exist
+	$ldf = $dbInfo.DatabaseLdf
+	$mdf = $dbInfo.DatabaseMdf
+    if (([System.IO.File]::Exists($ldf))) {
+	  Write-Host "Database LDF file still exists - $ldf"
+	}
+    if (([System.IO.File]::Exists($mdf))) {
+	  Write-Host "Database MDF file still exists - $mdf"
+	}
   }
   else {
     Write-Host "No database VMS_DevConfig deletion performed"
