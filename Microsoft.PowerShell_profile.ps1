@@ -138,9 +138,13 @@ function Tsql-Delete-Database($arg) {
 	}
 	else {
       if ($arg -eq "force") {
-        Write-Host "Deleting ldf & mdf files"
-        [System.IO.File]::Delete($ldf)
-        [System.IO.File]::Delete($mdf)
+        Write-Host "Deleting ldf & mdf files"		
+        if (([System.IO.File]::Exists($ldf))) {
+          [System.IO.File]::Delete($ldf)
+		}	
+        if (([System.IO.File]::Exists($mdf))) {
+          [System.IO.File]::Delete($mdf)
+		}
       }
 	}
 	
