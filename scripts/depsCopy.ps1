@@ -9,6 +9,7 @@ if (!([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
 function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
   $sourceSplit = $source.Split("_");
   $destSplit = $dest.Split("_");
+  $fullSource = "$rootFolder\$source"
   
   $project = $sourceSplit[0]
   Write-Host "Copy $project dlls to $dest ..."
@@ -16,22 +17,39 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
   $json = Get-Content "$powershellIncludeDirectory\CodeComponents.json"
   $ser = New-Object System.Web.Script.Serialization.JavaScriptSerializer
   $obj = $ser.DeserializeObject($json)
+  
+  # Confirm source repo directory exists
+  if (!([System.IO.Directory]::Exists("$fullSource"))) {
+    Write-Host "Directory $fullSource does not exist - can't copy file"
+	exit
+  }
+  
+  $fileCopyCount = 0
 
   foreach ($dll in $obj.$project) {
     if ($dll.dll) {
       $dllFile = $dll.dll
       $dllPath = $dll.path
-	  $dllPath = "$rootFolder\$source\source\$dllPath"
+	  $dllPath = "$fullSource\source\$dllPath"
+	  	  
 	  $sourceDll = "$dllPath\$dllFile"
 	  $dllFolder = $dest
       Write-Host "$sourceDll -> $dllFolder"
-      Copy-Item $sourceDll $dllFolder
+      Copy-Item $sourceDll $dllFolder -errorAction Stop
+	  $fileCopyCount = $fileCopyCount + 1
       $sourcePdb = $sourceDll -replace ".dll",".pdb"
       Copy-Item $sourcePdb $dllFolder
+	  $fileCopyCount = $fileCopyCount + 1
     }
     else {
       Write-Host "Project dlls for $project not recognised"
+	  exit
     }
+  }
+  
+  if ($fileCopyCount -eq 0) {
+    Write-Host "No files copied"
+	exit
   }
 }
 
