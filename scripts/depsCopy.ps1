@@ -53,8 +53,24 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
   }
 }
 
-$sourceRepos = "V1_trunk"
-$destRepos = "V2_trunk"
+# $sourceRepos & $destRepos read from depsCopy_args.json in C:\ProgramData\WindowsPowerShell includes
+$sourceRepos = "TitanVision_trunk", "AdminTool_trunk"
+$destRepos = ""
+
+if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
+  # Load args
+  if (([System.IO.File]::Exists("$powershellIncludeDirectory\depsCopy_args.json"))) {
+    $jsonFile = Get-Content "$powershellIncludeDirectory\depsCopy_args.json"
+    $jsonSerializer = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+    $jsonArgs = $jsonSerializer.DeserializeObject($jsonFile)
+	$sourceRepos = $jsonArgs.sourceRepos
+	$destRepos = $jsonArgs.destRepos
+  }
+  else {
+    Write-Host "Args file doesn't exist $powershellIncludeDirectory\depsCopy_args.json"
+	exit
+  }
+}
 
 foreach ($sourceRepo in $sourceRepos) {
   foreach ($destRepo in $destRepos) {

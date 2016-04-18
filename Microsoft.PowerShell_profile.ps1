@@ -36,6 +36,24 @@ if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
   }
 }
 
+function Get-Args($script) {
+  # Opens up or creates a script file for the specified $script file
+  # test.ps1 -> ${env:ProgramData}\WindowsPowerShell includes\test_args.json
+  $argsFile = $script -replace ".ps1","_args.json"
+  $argsFile = "$powershellIncludeDirectory\$argsFile"
+  Write-Host "Opening $argsFile"
+  
+  if (!([System.IO.File]::Exists("$powershellIncludeDirectory\DatabaseInfo.json"))) {
+    $confirmation = Read-Host "No args file exists?  Do you wish to create (y/n)"
+    If ($confirmation -Match 'y') {
+      npp $argsFile
+    }
+  }
+  else {
+    npp $argsFile
+  }
+}
+
 # Reload profile
 function Reload-Profile() {
   # This is just . $profile, but at the moment I won't remember that
