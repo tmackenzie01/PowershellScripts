@@ -289,7 +289,7 @@ function ffmpeg-capture-rtsp($rtspPath, $outputFile) {
   if ([string]::IsNullOrEmpty($outputFile)) {
     Write-Host "Specify 2nd param output file"
   }
-  
+  #ffmpeg -f rtsp -i rtsp://172.16.2.121:554/ch0_unicast_firststream out2.mp4 -loglevel debug
   #ffmpeg -t 00:00:30 -f rtsp -i rtsp://172.16.2.69:554/axis-media/media.amp -an -pass 1 -vcodec libx264 -b 180000 -bt 180000 -threads 0 -y outfile.mp4
   ffmpeg -t 00:00:30 -f rtsp -i $rtspPath -an -pass 1 -vcodec libx264 -b 180000 -bt 180000 -threads 0 -y $outputFile
 }
