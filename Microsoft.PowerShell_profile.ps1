@@ -393,3 +393,8 @@ function sign ($filename) {
   $cert = @(gci cert:\currentuser\My -codesign)[0]
   Set-AuthenticodeSignature $filename $cert
 }
+
+function grep($searchString) {
+  Write-Host "Output from: Select-String .\*.* -Pattern ""$searchstring"""
+  Select-String .\*.* -Pattern "$searchstring"
+}
