@@ -56,6 +56,7 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
 # $sourceRepos & $destRepos read from depsCopy_args.json in C:\ProgramData\WindowsPowerShell includes
 $sourceRepos = "TitanVision_trunk", "AdminTool_trunk"
 $destRepos = ""
+$sandboxPath = ""
 
 if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
   # Load args
@@ -65,6 +66,7 @@ if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
     $jsonArgs = $jsonSerializer.DeserializeObject($jsonFile)
 	$sourceRepos = $jsonArgs.sourceRepos
 	$destRepos = $jsonArgs.destRepos
+	$sandboxPath = $jsonArgs.sandboxPath
   }
   else {
     Write-Host "Args file doesn't exist $powershellIncludeDirectory\depsCopy_args.json"
@@ -74,7 +76,7 @@ if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
 
 foreach ($sourceRepo in $sourceRepos) {
   foreach ($destRepo in $destRepos) {
-    CopyDlls -rootFolder "C:\CodeSandbox" -source "$sourceRepo" -dest "$destRepo"
+    CopyDlls -rootFolder "$sandboxPath" -source "$sourceRepo" -dest "$destRepo"
   }
 }
 
