@@ -361,6 +361,34 @@ function CapturePreviousCommand() {
   Write-Host "Previous:" $prev
   $prev | clip
 }
+
+# Opens TortoiseSVN dialog for checkout and populates fields
+function Svn-Checkout($repoPath, $codeFolder) {
+  if (([string]::IsNullOrEmpty($repoPath)) -or ([string]::IsNullOrEmpty($codeFolder))) {
+    Write-Host "Command is as follows:"
+	Write-Host 'Svn-Checkout http://X.X.X.X/svn/CodeProject01/trunk D:\CodeSandbox'
+  }
+  else {
+    # Use $repoPath as the default path
+    $codeBuiltPath = $repoPath
+	$repoPathSplit = $repoPath.Split("/")
+	
+	if ($repoPathSplit.Count -gt 2) {
+	  if ($repoPath.EndsWith("trunk")) {
+        $projectName = $repoPathSplit[$repoPathSplit.Count - 2]
+        $codeBuiltPath = $codeFolder + "\" + "$projectName" + "_trunk"
+      }
+	  if ($repoPath.Contains("branches")) {
+        $projectName = $repoPathSplit[$repoPathSplit.Count - 3]
+        $branchName = $repoPathSplit[$repoPathSplit.Count - 1]
+        $codeBuiltPath = $codeFolder + "\" + "$projectName" + "_branches_" + $branchName
+      }
+	}	
+	
+    TortoiseProc.exe /command:checkout /path:$codeBuiltPath /url:"$repoPath"
+  }
+}
+
 function sign ($filename) {
   $cert = @(gci cert:\currentuser\My -codesign)[0]
   Set-AuthenticodeSignature $filename $cert
