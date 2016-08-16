@@ -211,6 +211,7 @@ function Tsql-List-Databases() {
     }
 	
 	# Is it a Main or Backup Server
+	$serverNodeTypeText = " Standalone Server"
 	$serverNodeExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "IF COL_LENGTH('tblServerNode','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
 	if ($serverNodeExists -eq "EXISTS") {
