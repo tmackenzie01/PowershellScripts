@@ -209,8 +209,22 @@ function Tsql-List-Databases() {
       $migrationStage = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT mediaMigrationStage FROM tblVersionNumber WHERE is_current=1" -W -h -1	
 	  $migrationStageText = " (migration stage $migrationStage)"
     }
+	
+	# Is it a Main or Backup Server
+	$serverNodeExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "IF COL_LENGTH('tblServerNode','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	
+	if ($serverNodeExists -eq "EXISTS") {
+	  $ip = (gwmi Win32_NetworkAdapterConfiguration | ? { $_.IPAddress -ne $null }).ipaddress[0]
+	  $serverNodeType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT node_type FROM tblServerNode WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
+	  if ($serverNodeType -eq 1) {
+	    $serverNodeTypeText = " Backup Server"
+	  }
+	  if ($serverNodeType -eq 0) {
+	    $serverNodeTypeText = " Main Server"
+	  }
+	}
 	  
-	$queryResults = "VMS_DevConfig" + " " + $versionNumber + $buildType + $migrationStageText 
+	$queryResults = "VMS_DevConfig" + " " + $versionNumber + $buildType + $serverNodeTypeText + $migrationStageText
 	
 	$hardwareCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblHardware" -W -h -1
 	$stationCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblVStation" -W -h -1
