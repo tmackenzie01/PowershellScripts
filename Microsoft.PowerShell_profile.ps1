@@ -83,7 +83,7 @@ function Tsql-Show-Tables ($searchString) {
 }
 
 function Tsql-Show-Columns ($tableName) {
-  sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "select column_name from information_schema.columns WHERE table_name = '$tableName' order by table_name, ordinal_position"
+  sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "select column_name from information_schema.columns WHERE table_name = '$tableName' order by table_name, ordinal_position"  | ForEach-Object {Write-Host $_.TrimEnd()}
 }
 
 function Tsql-Open-Backups() {
