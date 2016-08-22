@@ -73,9 +73,15 @@ function Help-Me() {
 function Tsql ($query) {
   sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q $query
 }
-function Tsql-Show-Tables () {
-  sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name"
+function Tsql-Show-Tables ($searchString) {
+  if ([string]::IsNullOrEmpty($searchString)) {
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name"
+  }
+  else {
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name" | Select-String -pattern $searchString
+  }
 }
+
 function Tsql-Show-Columns ($tableName) {
   sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "select column_name from information_schema.columns WHERE table_name = '$tableName' order by table_name, ordinal_position"
 }
