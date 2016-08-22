@@ -217,10 +217,10 @@ function Tsql-List-Databases() {
 	if ($serverNodeExists -eq "EXISTS") {
 	  $ip = (gwmi Win32_NetworkAdapterConfiguration | ? { $_.IPAddress -ne $null }).ipaddress[0]
 	  $serverNodeType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SET NOCOUNT ON;SELECT node_type FROM tblServerNode WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
-	  if ($serverNodeType -eq 1) {
+	  if ($serverNodeType -eq 2) {
 	    $serverNodeTypeText = " Backup Server"
 	  }
-	  if ($serverNodeType -eq 0) {
+	  if ($serverNodeType -eq 1) {
 	    $serverNodeTypeText = " Main Server"
 	  }
 	}
