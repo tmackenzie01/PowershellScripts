@@ -75,7 +75,7 @@ function Tsql ($query) {
 }
 function Tsql-Show-Tables ($searchString) {
   if ([string]::IsNullOrEmpty($searchString)) {
-    sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name"
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name" | ForEach-Object {Write-Host $_.TrimEnd()}
   }
   else {
     sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name" | Select-String -pattern $searchString
