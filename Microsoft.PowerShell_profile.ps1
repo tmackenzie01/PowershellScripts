@@ -383,6 +383,12 @@ function CapturePreviousCommand() {
   $prev | clip
 }
 
+function TidyUpTsql() {
+  $tempFile = [io.path]::GetTempFileName() 
+  Invoke-History >> $tempFile
+  c:\users\tmackenzie01\source\repos\tsqltidyup\tsqltidyup\tsqltidyup\bin\debug\tsqltidyup.exe $tempFile
+}
+
 # Opens TortoiseSVN dialog for checkout and populates fields
 function Svn-Checkout($repoPath, $codeFolder) {
   if (([string]::IsNullOrEmpty($repoPath)) -or ([string]::IsNullOrEmpty($codeFolder))) {
