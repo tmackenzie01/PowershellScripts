@@ -70,8 +70,19 @@ function Help-Me() {
 }
 
 # SQL Server functionality
-function Tsql ($query) {
-  sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q $query
+function Tsql {
+  Param([Parameter(Mandatory=$true)] [String]$query,
+		[switch] $tidy)
+  if ($tidy) {  
+  
+    $tempFile = [io.path]::GetTempFileName() 
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q $query >> $tempFile
+    c:\users\tmackenzie01\source\repos\tsqltidyup\tsqltidyup\tsqltidyup\bin\debug\tsqltidyup.exe $tempFile
+  }
+  else {
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -d VMS_DevConfig -Q $query
+  }
+  Write-Host $tsqlOutput
 }
 function Tsql-Show-Tables ($searchString) {
   if ([string]::IsNullOrEmpty($searchString)) {
