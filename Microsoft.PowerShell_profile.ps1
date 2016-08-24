@@ -159,7 +159,8 @@ function Tsql-Restore-Backup-Demo () {
 }
 
 # This accepts argument "force" to delete mdf & ldf files
-function Tsql-Delete-Database($arg) {
+function Tsql-Delete-Database {
+  Param([switch] $force)
   $ldf = $dbInfo.DatabaseLdf
   $mdf = $dbInfo.DatabaseMdf
   $confirmation = Read-Host "This will delete VMS_DevConfig, do you want to continue? (y/n)"
@@ -172,8 +173,8 @@ function Tsql-Delete-Database($arg) {
       Write-Host "Database VMS_DevConfig deleted"
 	}
 	else {
-      if ($arg -eq "force") {
-        Write-Host "Deleting ldf & mdf files"		
+      if ($force) {
+        Write-Host "Deleting ldf & mdf files"	
         if (([System.IO.File]::Exists($ldf))) {
           [System.IO.File]::Delete($ldf)
 		}	
@@ -186,11 +187,11 @@ function Tsql-Delete-Database($arg) {
 	# Check if mdf or ldf still exist
     if (([System.IO.File]::Exists($ldf))) {
 	  Write-Host "Database LDF file still exists - $ldf"
-	  Write-Host "Use force parameter to force delete"
+	  Write-Host "Use -force parameter to force delete"
 	}
     if (([System.IO.File]::Exists($mdf))) {
 	  Write-Host "Database MDF file still exists - $mdf"
-	  Write-Host "Use force parameter to force delete"
+	  Write-Host "Use -force parameter to force delete"
 	}
   }
   else {
