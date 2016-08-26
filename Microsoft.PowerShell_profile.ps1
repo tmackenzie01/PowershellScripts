@@ -154,7 +154,6 @@ function Tsql-Restore-Backup ($backup) {
     $query = "SELECT name FROM master..sysdatabases WHERE name <> 'tempdb' AND name <> 'model' AND name <> 'msdb'"
     $queryResults = sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "$nocount;$query" -W -h -1
     $move = "WITH MOVE '$databaseDat' TO '$mdf', MOVE '$databaseLog' TO '$ldf'"
-	Write-Host $move
     sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "RESTORE DATABASE $databaseName FROM DISK = '$backup' $move"
   }
   else {
@@ -235,6 +234,17 @@ function Tsql-List-Databases() {
   $dbZ = $dbInfo.dbZ
   $dbZNameSingular = $dbInfo.dbZNameSingular
   $dbZNamePlural = $dbInfo.dbZNamePlural
+  $dbM = $dbInfo.dbM
+  $dbMNameSingular = $dbInfo.dbMNameSingular
+  $dbMNamePlural = $dbInfo.dbMNamePlural
+  $dbMo = $dbInfo.dbMo
+  $dbMoNameSingular = $dbInfo.dbMoNameSingular
+  $dbMoNamePlural = $dbInfo.dbMoNamePlural
+  $dbAu = $dbInfo.dbAu
+  $dbAuNameSingular = $dbInfo.dbAuNameSingular
+  $dbAuNamePlural = $dbInfo.dbAuNamePlural
+  $dbSn = $dbInfo.dbSn
+  $dbV = $dbInfo.dbV
   
   # "SET NOCOUNT ON" means the "(N rows affected)" at the bottom of the query is not displayed
   $nocount = "SET NOCOUNT ON"
@@ -243,34 +253,34 @@ function Tsql-List-Databases() {
   $queryResults = sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "$nocount;$query" -W -h -1
   if ($queryResults -contains "$databaseName") {
     # Get the version number
-    $versionNumber = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM tblVersionNumber WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
+    $versionNumber = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM $dbV WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
 	$versionNumber = $versionNumber -replace " ","."
 	
 	# Confirm we are looking at a database which has the build_type (introduced in 6.18)
-	$buildTypeExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "IF COL_LENGTH('tblVersionNumber','build_type') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	$buildTypeExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "IF COL_LENGTH('$dbV','build_type') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
 	if ($buildTypeExists -eq "EXISTS") {
 	  #Get the build type (case statement converts it from number to text)
-      $buildType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT CASE WHEN build_type = 1 THEN 'Titan/GeoLog Secure' WHEN build_type = 2 THEN 'Titan Standard' WHEN build_type = 4 THEN 'Insecure' ELSE 'Unknown' END FROM tblVersionNumber WHERE is_current=1" -W -h -1	
+      $buildType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT CASE WHEN build_type = 1 THEN 'Titan/GeoLog Secure' WHEN build_type = 2 THEN 'Titan Standard' WHEN build_type = 4 THEN 'Insecure' ELSE 'Unknown' END FROM $dbV WHERE is_current=1" -W -h -1	
 	  $buildType = " $buildType"
     }
 	
 	# Get the migration state as well (introduced in 6.25)
-	$migrationStageExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "IF COL_LENGTH('tblVersionNumber','mediaMigrationStage') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	$migrationStageExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "IF COL_LENGTH('$dbV','mediaMigrationStage') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
 	if ($migrationStageExists -eq "EXISTS") {
 	  #Get the build type (case statement converts it from number to text)
-      $migrationStage = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT mediaMigrationStage FROM tblVersionNumber WHERE is_current=1" -W -h -1	
+      $migrationStage = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT mediaMigrationStage FROM $dbV WHERE is_current=1" -W -h -1	
 	  $migrationStageText = " (migration stage $migrationStage)"
     }
 	
 	# Is it a Main or Backup Server
 	$serverNodeTypeText = " Standalone Server"
-	$serverNodeExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "IF COL_LENGTH('tblServerNode','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	$serverNodeExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "IF COL_LENGTH('$dbSn','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
 	if ($serverNodeExists -eq "EXISTS") {
 	  $ip = (gwmi Win32_NetworkAdapterConfiguration | ? { $_.IPAddress -ne $null }).ipaddress[0]
-	  $serverNodeType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT node_type FROM tblServerNode WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
+	  $serverNodeType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
 	  if ($serverNodeType -eq 2) {
 	    $serverNodeTypeText = " Backup Server"
 	  }
@@ -293,12 +303,12 @@ function Tsql-List-Databases() {
 	$zCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbZ" -W -h -1
 	$summaryText2 = "$caCount $dbCaNamePlural, $coCount $dbCoNamePlural, $apCount $dbApNamePlural ($zCount $dbZNamePlural)"
 	
-	$mapCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblMap" -W -h -1
-	$mapObjectCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblMapObject" -W -h -1
-	$summaryText3 = "$mapCount maps, $mapObjectCount map objects"
+	$mCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbM" -W -h -1
+	$moCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbMo" -W -h -1
+	$summaryText3 = "$mCount $dbMNamePlural, $moCount $dbMoNamePlural"
 	
-	$auditCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblAuditServer" -W -h -1
-	$summaryText4 = "$auditCount audit rows"
+	$auCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAu" -W -h -1
+	$summaryText4 = "$auCount $dbAuNamePlural"
   }
   
   Write-Host ""
@@ -312,10 +322,12 @@ function Tsql-List-Databases() {
 
 function Tsql-Backup-Database() {
   $databaseName = $dbInfo.DatabaseName
+  $dbV = $dbInfo.dbV
+  
   # backup up database to a folder called automatic backups
   # do not delete the database, this must be done manually
   $date = Get-Date -format yyyyMMdd_HHmmss
-  $versionNumber = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM tblVersionNumber WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
+  $versionNumber = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM $dbV WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
   $versionNumber = $versionNumber -replace " ","."
   $tag = $versionNumber + "_" + $date
   
