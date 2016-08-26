@@ -223,6 +223,18 @@ function Tsql-List-Databases() {
   $dbAA = $dbInfo.dbAA
   $dbAANameSingular = $dbInfo.dbAANameSingular
   $dbAANamePlural = $dbInfo.dbAANamePlural
+  $dbCa = $dbInfo.dbCa
+  $dbCaNameSingular = $dbInfo.dbCaNameSingular
+  $dbCaNamePlural = $dbInfo.dbCaNamePlural
+  $dbCo = $dbInfo.dbCo
+  $dbCoNameSingular = $dbInfo.dbCoNameSingular
+  $dbCoNamePlural = $dbInfo.dbCoNamePlural
+  $dbAp = $dbInfo.dbAp
+  $dbApNameSingular = $dbInfo.dbApNameSingular
+  $dbApNamePlural = $dbInfo.dbApNamePlural
+  $dbZ = $dbInfo.dbZ
+  $dbZNameSingular = $dbInfo.dbZNameSingular
+  $dbZNamePlural = $dbInfo.dbZNamePlural
   
   # "SET NOCOUNT ON" means the "(N rows affected)" at the bottom of the query is not displayed
   $nocount = "SET NOCOUNT ON"
@@ -274,12 +286,12 @@ function Tsql-List-Databases() {
 	$aCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbA" -W -h -1
 	$aaCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAA" -W -h -1
 	$summaryText1 = "$hCount $dbHNamePlural, $vsCount $dbVSNamePlural, $aCount $dbANamePlural ($aaCount $dbAANamePlural)"
-	
-	$cameraCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblCamera" -W -h -1
-	$codecCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblCodec" -W -h -1
-	$panelCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblAlarmPanel" -W -h -1
-	$zoneCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblZone" -W -h -1
-	$summaryText2 = "$cameraCount cameras, $codecCount codecs, $panelCount panels ($zoneCount zones)"
+		
+	$caCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbCa" -W -h -1
+	$coCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbCo" -W -h -1
+	$apCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAp" -W -h -1
+	$zCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbZ" -W -h -1
+	$summaryText2 = "$caCount $dbCaNamePlural, $coCount $dbCoNamePlural, $apCount $dbApNamePlural ($zCount $dbZNamePlural)"
 	
 	$mapCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblMap" -W -h -1
 	$mapObjectCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblMapObject" -W -h -1
