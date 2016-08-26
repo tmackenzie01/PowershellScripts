@@ -211,6 +211,10 @@ function Tsql-Delete-Database {
 
 function Tsql-List-Databases() {
   $databaseName = $dbInfo.DatabaseName
+  $dbH = $dbInfo.dbH
+  $dbHname = $dbInfo.dbHName
+  $dbHNamePlural = $dbInfo.dbHNamePlural
+  
   # "SET NOCOUNT ON" means the "(N rows affected)" at the bottom of the query is not displayed
   $nocount = "SET NOCOUNT ON"
   # -W removes trailing spaces, -h -1 specifies no headers to be shown, https://msdn.microsoft.com/en-us/library/ms162773.aspx 
@@ -256,11 +260,11 @@ function Tsql-List-Databases() {
 	  
 	$queryResults = "$databaseName" + " " + $versionNumber + $buildType + $serverNodeTypeText + $migrationStageText
 	
-	$hardwareCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblHardware" -W -h -1
+	$hCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbH" -W -h -1
 	$stationCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblVStation" -W -h -1
 	$alarmCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblAlarm" -W -h -1
 	$alarmActionCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblAlarmAction" -W -h -1
-	$summaryText1 = "$hardwareCount devices, $stationCount clients, $alarmCount alarms ($alarmActionCount actions)"
+	$summaryText1 = "$hCount $dbHNamePlural, $stationCount clients, $alarmCount alarms ($alarmActionCount actions)"
 	
 	$cameraCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblCamera" -W -h -1
 	$codecCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblCodec" -W -h -1
