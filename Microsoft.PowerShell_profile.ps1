@@ -212,8 +212,17 @@ function Tsql-Delete-Database {
 function Tsql-List-Databases() {
   $databaseName = $dbInfo.DatabaseName
   $dbH = $dbInfo.dbH
-  $dbHname = $dbInfo.dbHName
+  $dbHNameSingular = $dbInfo.dbHNameSingular
   $dbHNamePlural = $dbInfo.dbHNamePlural
+  $dbVS = $dbInfo.dbVS
+  $dbVSNameSingular = $dbInfo.dbVSNameSingular
+  $dbVSNamePlural = $dbInfo.dbVSNamePlural
+  $dbA = $dbInfo.dbA
+  $dbAANameSingular = $dbInfo.dbANameSingular
+  $dbANamePlural = $dbInfo.dbANamePlural
+  $dbAA = $dbInfo.dbAA
+  $dbAANameSingular = $dbInfo.dbAANameSingular
+  $dbAANamePlural = $dbInfo.dbAANamePlural
   
   # "SET NOCOUNT ON" means the "(N rows affected)" at the bottom of the query is not displayed
   $nocount = "SET NOCOUNT ON"
@@ -261,10 +270,10 @@ function Tsql-List-Databases() {
 	$queryResults = "$databaseName" + " " + $versionNumber + $buildType + $serverNodeTypeText + $migrationStageText
 	
 	$hCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbH" -W -h -1
-	$stationCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblVStation" -W -h -1
-	$alarmCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblAlarm" -W -h -1
-	$alarmActionCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblAlarmAction" -W -h -1
-	$summaryText1 = "$hCount $dbHNamePlural, $stationCount clients, $alarmCount alarms ($alarmActionCount actions)"
+	$vsCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbVS" -W -h -1
+	$aCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbA" -W -h -1
+	$aaCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAA" -W -h -1
+	$summaryText1 = "$hCount $dbHNamePlural, $vsCount $dbVSNamePlural, $aCount $dbANamePlural ($aaCount $dbAANamePlural)"
 	
 	$cameraCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblCamera" -W -h -1
 	$codecCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM tblCodec" -W -h -1
