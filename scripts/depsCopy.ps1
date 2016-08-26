@@ -1,3 +1,5 @@
+Param([switch] $revert)
+
 [System.Reflection.Assembly]::LoadWithPartialName("System.Web.Extensions") > $null
 
 # Check powershell include directory exists
@@ -53,6 +55,53 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
   }
 }
 
+
+function RevertDlls([String] $rootFolder, [String] $source, [String] $dest) {
+  $sourceSplit = $source.Split("_");
+  $destSplit = $dest.Split("_");
+  $fullSource = "$rootFolder\$source"
+  
+  $project = $sourceSplit[0]
+  $destNoRootFolder = "$dest\Dependencies_svn\dlls\internal"
+  $dest = "$rootFolder\$dest\Dependencies_svn\dlls\internal"
+  Write-Host "Revert changes in $destNoRootFolder ..."
+  $json = Get-Content "$powershellIncludeDirectory\CodeComponents.json"
+  $ser = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+  $obj = $ser.DeserializeObject($json)
+  
+  # Confirm source repo directory exists
+  if (!([System.IO.Directory]::Exists("$fullSource"))) {
+    Write-Host "Directory $fullSource does not exist - can't copy file"
+	exit
+  }
+  
+  $fileCopyCount = 0
+
+  foreach ($dll in $obj.$project) {
+    if ($dll.dll) {
+      $dllFile = $dll.dll
+      $dllPath = $dll.path
+	  $dllPath = "$fullSource\source\$dllPath"
+	  	  
+	  $sourceDll = "$dllPath\$dllFile"
+	  $dllFolder = $dest
+	  $revertFile = "$dllFolder\$dllFile"
+	  
+	  Write-Host $revertFile
+	  svn revert $revertFile
+      $revertFile = $revertFile -replace ".dll",".pdb"
+	  # This messes up the \dlls\ part of the path so just do this again - fix it properly later
+      $revertFile = $revertFile -replace ".pdbs","\dlls"
+	  Write-Host $revertFile
+	  svn revert $revertFile
+    }
+    else {
+      Write-Host "Project dlls for $project not recognised"
+	  exit
+    }
+  }
+}
+
 # $sourceRepos & $destRepos read from depsCopy_args.json in C:\ProgramData\WindowsPowerShell includes
 $sourceRepos = "TitanVision_trunk", "AdminTool_trunk"
 $destRepos = ""
@@ -74,9 +123,18 @@ if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
   }
 }
 
-foreach ($sourceRepo in $sourceRepos) {
-  foreach ($destRepo in $destRepos) {
-    CopyDlls -rootFolder "$sandboxPath" -source "$sourceRepo" -dest "$destRepo"
+if ($revert) {
+  foreach ($sourceRepo in $sourceRepos) {
+    foreach ($destRepo in $destRepos) {
+      RevertDlls -rootFolder "$sandboxPath" -source "$sourceRepo" -dest "$destRepo"
+    }
+  }  
+}
+else {
+  foreach ($sourceRepo in $sourceRepos) {
+    foreach ($destRepo in $destRepos) {
+      CopyDlls -rootFolder "$sandboxPath" -source "$sourceRepo" -dest "$destRepo"
+    }
   }
 }
 
