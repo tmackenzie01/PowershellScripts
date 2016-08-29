@@ -275,21 +275,32 @@ function Tsql-List-Databases() {
     }
 	
 	# Is it a Main or Backup Server
-	$serverNodeTypeText = " Standalone Server"
-	$serverNodeExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "IF COL_LENGTH('$dbSn','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	$snTypeText = " (Unknown server node type) Server"
+	$snExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "IF COL_LENGTH('$dbSn','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
-	if ($serverNodeExists -eq "EXISTS") {
+	if ($snExists -eq "EXISTS") {
 	  $ip = (gwmi Win32_NetworkAdapterConfiguration | ? { $_.IPAddress -ne $null }).ipaddress[0]
-	  $serverNodeType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
-	  if ($serverNodeType -eq 2) {
-	    $serverNodeTypeText = " Backup Server"
+	  $snCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbSn;SET NOCOUNT OFF" -W -h -1
+	  $snType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
+	  if (($snType -eq 3) -and ($snCount -lt 3)) {
+	    $snTypeText = " Backup Server"
 	  }
-	  if ($serverNodeType -eq 1) {
-	    $serverNodeTypeText = " Main Server"
+	  else {
+	    if (($snType -eq 2) -and ($snCount -eq 2)) {
+  	      $snTypeText = " Main Server"
+		}
+		else {
+		  if ($snCount -eq 0) {
+			$snTypeText = " Standalone Server"
+		  }
+		  else {
+		    $snTypeText = " (Unknown server node type) Server ($snType)"
+		  }
+		}
 	  }
 	}
 	  
-	$queryResults = "$databaseName" + " " + $versionNumber + $buildType + $serverNodeTypeText + $migrationStageText
+	$queryResults = "$databaseName" + " " + $versionNumber + $buildType + $snTypeText + $migrationStageText
 	
 	$hCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbH" -W -h -1
 	$vsCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbVS" -W -h -1
