@@ -109,7 +109,7 @@ function Tsql-Export-Database($outfile) {
     foreach ($tab in $dbInfo.Tables) {
       Write-Host "Fetching from $tab"
       "Fetching from $tab" >> $outfile
-      sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SELECT * FROM $tab" >> $outfile
+      sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SELECT '$tab', * FROM $tab" >> $outfile
     }
   }
 }
