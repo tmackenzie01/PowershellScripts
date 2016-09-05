@@ -100,6 +100,20 @@ function Tsql-Show-Columns ($tableName) {
   sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "select column_name from information_schema.columns WHERE table_name = '$tableName' order by table_name, ordinal_position"  | ForEach-Object {Write-Host $_.TrimEnd()}
 }
 
+function Tsql-Export-Database($outfile) {	
+  $databaseName = $dbInfo.DatabaseName
+  if ([string]::IsNullOrEmpty($outfile)) {
+    Write-Host "Supply an outfile"
+  }
+  else {  
+    foreach ($tab in $dbInfo.Tables) {
+      Write-Host "Fetching from $tab"
+      "Fetching from $tab" >> $outfile
+      sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SELECT * FROM $tab" >> $outfile
+    }
+  }
+}
+
 function Tsql-Open-Backups() {
   explorer $tsqlBackupsLocation
 }
@@ -208,7 +222,7 @@ function Tsql-Delete-Database {
   }
 }
 
-function Tsql-List-Databases() {
+function Tsql-List-Databases([switch] $verbose) {
   $databaseName = $dbInfo.DatabaseName
   $dbH = $dbInfo.dbH
   $dbHNameSingular = $dbInfo.dbHNameSingular
@@ -251,6 +265,7 @@ function Tsql-List-Databases() {
   $dbSpNamePlural = $dbInfo.dbSpNamePlural
   $dbSn = $dbInfo.dbSn
   $dbV = $dbInfo.dbV
+  $listDatabasesSpecialQuery1 = $dbInfo.listDatabasesSpecialQuery1
   
   # "SET NOCOUNT ON" means the "(N rows affected)" at the bottom of the query is not displayed
   $nocount = "SET NOCOUNT ON"
@@ -330,6 +345,12 @@ function Tsql-List-Databases() {
 	
 	$auCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAu" -W -h -1
 	$summaryText5 = "$auCount $dbAuNamePlural"
+	
+	if ($verbose) {
+	  $verboseText1Heading = "$spCount $dbSpNamePlural:"
+	  $verboseText1Result = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON; $listDatabasesSpecialQuery1" -W -h -1
+	  $verboseText1 = $verboseText1Heading + $verboseText1Result
+	}
   }
   
   Write-Host ""
@@ -340,6 +361,11 @@ function Tsql-List-Databases() {
   Write-Host $summaryText3
   Write-Host $summaryText4
   Write-Host $summaryText5
+  
+  if ($verbose) {
+    Write-Host ""
+	Write-Host $verboseText1
+  }
 }
 
 function Tsql-Backup-Database() {
