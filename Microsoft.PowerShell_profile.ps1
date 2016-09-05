@@ -243,6 +243,12 @@ function Tsql-List-Databases() {
   $dbAu = $dbInfo.dbAu
   $dbAuNameSingular = $dbInfo.dbAuNameSingular
   $dbAuNamePlural = $dbInfo.dbAuNamePlural
+  $dbRc = $dbInfo.dbRc
+  $dbRcNameSingular = $dbInfo.dbRcNameSingular
+  $dbRcNamePlural = $dbInfo.dbRcNamePlural
+  $dbSp = $dbInfo.dbSp
+  $dbSpNameSingular = $dbInfo.dbSpNameSingular
+  $dbSpNamePlural = $dbInfo.dbSpNamePlural
   $dbSn = $dbInfo.dbSn
   $dbV = $dbInfo.dbV
   
@@ -303,23 +309,27 @@ function Tsql-List-Databases() {
 	$queryResults = "$databaseName" + " " + $versionNumber + $buildType + $snTypeText + $migrationStageText
 	
 	$hCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbH" -W -h -1
+	$spCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbSp" -W -h -1
 	$vsCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbVS" -W -h -1
 	$aCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbA" -W -h -1
 	$aaCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAA" -W -h -1
-	$summaryText1 = "$hCount $dbHNamePlural, $vsCount $dbVSNamePlural, $aCount $dbANamePlural ($aaCount $dbAANamePlural)"
+	$summaryText1 = "$hCount $dbHNamePlural, $vsCount $dbVSNamePlural, $spCount $dbSpNamePlural, $aCount $dbANamePlural ($aaCount $dbAANamePlural)"
 		
 	$caCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbCa" -W -h -1
 	$coCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbCo" -W -h -1
+	$rcCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbRc" -W -h -1
+	$summaryText2 = "$caCount $dbCaNamePlural, $coCount $dbCoNamePlural ($rcCount $dbRcNamePlural)"
+	
 	$apCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAp" -W -h -1
 	$zCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbZ" -W -h -1
-	$summaryText2 = "$caCount $dbCaNamePlural, $coCount $dbCoNamePlural, $apCount $dbApNamePlural ($zCount $dbZNamePlural)"
+	$summaryText3 = "$apCount $dbApNamePlural ($zCount $dbZNamePlural)"
 	
 	$mCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbM" -W -h -1
 	$moCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbMo" -W -h -1
-	$summaryText3 = "$mCount $dbMNamePlural, $moCount $dbMoNamePlural"
+	$summaryText4 = "$mCount $dbMNamePlural, $moCount $dbMoNamePlural"
 	
 	$auCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAu" -W -h -1
-	$summaryText4 = "$auCount $dbAuNamePlural"
+	$summaryText5 = "$auCount $dbAuNamePlural"
   }
   
   Write-Host ""
@@ -329,6 +339,7 @@ function Tsql-List-Databases() {
   Write-Host $summaryText2
   Write-Host $summaryText3
   Write-Host $summaryText4
+  Write-Host $summaryText5
 }
 
 function Tsql-Backup-Database() {
