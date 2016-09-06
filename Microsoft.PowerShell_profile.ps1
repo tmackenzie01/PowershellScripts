@@ -131,7 +131,8 @@ function Tsql-Export-Database($outfile) {
     $tables = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name"
 	foreach ($table in $tables) {
 	  $tableName = $table.TrimEnd()
-	  if ($tableName.StartsWith("tbl")) {
+	  # Remember to skip the table that can get really large - they can do that separate if really required
+	  if (($tableName.StartsWith("tbl")) -and ($tableName -ne "$($dbInfo.dbAu)")) {
         Write-Host "Fetching from $tableName"
         "Fetching from $tableName" >> $outfile
         sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SELECT '$tableName', * FROM $tableName" >> $outfile
