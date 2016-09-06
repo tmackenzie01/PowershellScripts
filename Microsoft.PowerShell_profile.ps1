@@ -87,12 +87,33 @@ function Tsql {
   }
   Write-Host $tsqlOutput
 }
-function Tsql-Show-Tables ($searchString) {
-  if ([string]::IsNullOrEmpty($searchString)) {
-    sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name" | ForEach-Object {Write-Host $_.TrimEnd()}
-  }
-  else {
-    sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name" | Select-String -pattern $searchString
+function Tsql-Show-Tables () {
+  Param([String]$searchString,
+		[switch] $count)
+  $tables = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name"
+  $showTablesText = ""
+  foreach ($table in $tables) {
+    $tableName = $table.TrimEnd()
+    if ($tableName.StartsWith("tbl")) {
+	  $countResult = ""
+      if ($count) {
+        # Add the row count to each result    
+	    $countResult = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SELECT COUNT(*) FROM $tableName"
+		# sqlcmd will return a blank line (the blank column), an underline, data, blank line, the rows affected count
+		$tableCount = $countResult[2].TrimStart().TrimEnd() + " row"
+		if ($tableCount -ne 1) {
+		  $tableCount = $tableCount + "s"
+		}
+      }
+	  
+      if (![string]::IsNullOrEmpty($searchString)) {
+	    if ($tableName.Contains($searchString)) {
+	      Write-Host "$tableName $tableCount"
+		}
+      } else {
+	    Write-Host "$tableName $tableCount"
+	  }
+    }
   }
 }
 
