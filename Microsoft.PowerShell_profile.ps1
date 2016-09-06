@@ -25,6 +25,9 @@ Write-Host "Loading dependencies..."
 Write-Host "Loading data..."
 if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
   # Load db info
+  # To access properties of $ dbInfo when inside a string use "$($dbInfo.DatabaseName)"
+  # For some reason I can't get this to work inside a sqlcmd call so have to
+  # use messy alias variables like in Tsql-List-Databases
   if (([System.IO.File]::Exists("$powershellIncludeDirectory\DatabaseInfo.json"))) {
     Write-Host "Loading data..."
     $dbInfoJson = Get-Content "$powershellIncludeDirectory\DatabaseInfo.json"
