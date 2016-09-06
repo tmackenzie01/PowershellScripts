@@ -108,13 +108,15 @@ function Tsql-Show-Tables () {
 	  
       if (![string]::IsNullOrEmpty($searchString)) {
 	    if ($tableName.Contains($searchString)) {
-	      Write-Host "$tableName $tableCount"
+	      $showTablesText = $showTablesText + "$tableName $tableCount`r`n"
 		}
       } else {
-	    Write-Host "$tableName $tableCount"
+	      $showTablesText = $showTablesText + "$tableName $tableCount`r`n"
 	  }
     }
   }
+  
+  return $showTablesText
 }
 
 function Tsql-Show-Columns ($tableName) {
