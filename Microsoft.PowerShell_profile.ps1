@@ -107,7 +107,7 @@ function Tsql-Show-Tables () {
       }
 	  
       if (![string]::IsNullOrEmpty($searchString)) {
-	    if ($tableName.Contains($searchString)) {
+	    if ($tableName.ToLower().Contains($searchString.ToLower())) {
 	      $showTablesText = $showTablesText + "$tableName $tableCount`r`n"
 		}
       } else {
