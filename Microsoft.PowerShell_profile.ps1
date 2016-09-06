@@ -73,46 +73,42 @@ function Help-Me() {
 function Tsql {
   Param([Parameter(Mandatory=$true)] [String]$query,
 		[switch] $tidy)
-  $databaseName = $dbInfo.DatabaseName
   if ($tidy) {  
   
     $tempFile = [io.path]::GetTempFileName() 
-    sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q $query >> $tempFile
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q $query >> $tempFile
     c:\users\tmackenzie01\source\repos\tsqltidyup\tsqltidyup\tsqltidyup\bin\debug\tsqltidyup.exe $tempFile
   }
   else {
-    sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q $query
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q $query
   }
   Write-Host $tsqlOutput
 }
 function Tsql-Show-Tables ($searchString) {
-  $databaseName = $dbInfo.DatabaseName
   if ([string]::IsNullOrEmpty($searchString)) {
-    sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name" | ForEach-Object {Write-Host $_.TrimEnd()}
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name" | ForEach-Object {Write-Host $_.TrimEnd()}
   }
   else {
-    sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name" | Select-String -pattern $searchString
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name" | Select-String -pattern $searchString
   }
 }
 
 function Tsql-Show-Columns ($tableName) {
-  $databaseName = $dbInfo.DatabaseName
-  sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "select column_name from information_schema.columns WHERE table_name = '$tableName' order by table_name, ordinal_position"  | ForEach-Object {Write-Host $_.TrimEnd()}
+  sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "select column_name from information_schema.columns WHERE table_name = '$tableName' order by table_name, ordinal_position"  | ForEach-Object {Write-Host $_.TrimEnd()}
 }
 
-function Tsql-Export-Database($outfile) {	
-  $databaseName = $dbInfo.DatabaseName
+function Tsql-Export-Database($outfile) {
   if ([string]::IsNullOrEmpty($outfile)) {
     Write-Host "Supply an outfile"
   }
   else {  
-    $tables = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name"
+    $tables = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name"
 	foreach ($table in $tables) {
 	  $tableName = $table.TrimEnd()
 	  if ($tableName.StartsWith("tbl")) {
         Write-Host "Fetching from $tableName"
         "Fetching from $tableName" >> $outfile
-        sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SELECT '$tableName', * FROM $tableName" >> $outfile
+        sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SELECT '$tableName', * FROM $tableName" >> $outfile
 	  }
 	}
   }
@@ -125,12 +121,11 @@ function Tsql-Open-Backups() {
 function Tsql-Restore-Backup ($backup) {
   $performRestore = $TRUE # Could just use $backup and check for null/empty, but good to have a boolean example in here
   $reason = ""
-  $databaseName = $dbInfo.DatabaseName
-  $databaseDat = $databaseName + "_dat"
-  $databaseLog = $databaseName + "_log"
+  $databaseDat = $dbInfo.DatabaseName + "_dat"
+  $databaseLog = $dbInfo.DatabaseName + "_log"
   
   # Check if database exists, don't restore if already exists
-  if (!($queryResults -contains "$databaseName")) {
+  if (!($queryResults -contains "$dbInfo.DatabaseName")) {
     # If no parameter is passed in then look at the automatic backups
 	if ([string]::IsNullOrEmpty($backup)) {
 	  # No backup file supplied, list the most recent backups in the automatic backup folder
@@ -172,7 +167,7 @@ function Tsql-Restore-Backup ($backup) {
     $query = "SELECT name FROM master..sysdatabases WHERE name <> 'tempdb' AND name <> 'model' AND name <> 'msdb'"
     $queryResults = sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "$nocount;$query" -W -h -1
     $move = "WITH MOVE '$databaseDat' TO '$mdf', MOVE '$databaseLog' TO '$ldf'"
-    sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "RESTORE DATABASE $databaseName FROM DISK = '$backup' $move"
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "RESTORE DATABASE $($dbInfo.DatabaseName) FROM DISK = '$backup' $move"
   }
   else {
     Write-Host "Restore not performed, $reason"
@@ -189,15 +184,14 @@ function Tsql-Delete-Database {
   Param([switch] $force)
   $ldf = $dbInfo.DatabaseLdf
   $mdf = $dbInfo.DatabaseMdf
-  $databaseName = $dbInfo.DatabaseName
-  $confirmation = Read-Host "This will delete $databaseName, do you want to continue? (y/n)"
+  $confirmation = Read-Host "This will delete $($dbInfo.DatabaseName), do you want to continue? (y/n)"
   If ($confirmation -Match 'y') {
-    Write-Host "Database $databaseName deletion in progress ..."
-    sqlcmd -b -S lpc:$pcName\SQLEXPRESS -Q "DROP DATABASE $databaseName"
+    Write-Host "Database $($dbInfo.DatabaseName) deletion in progress ..."
+    sqlcmd -b -S lpc:$pcName\SQLEXPRESS -Q "DROP DATABASE $($dbInfo.DatabaseName)"
 	$sqlReturnCode = $LASTEXITCODE
 	
 	if ($sqlReturnCode -eq 0) {
-      Write-Host "Database $databaseName deleted"
+      Write-Host "Database $($dbInfo.DatabaseName) deleted"
 	}
 	else {
       if ($force) {
@@ -227,7 +221,6 @@ function Tsql-Delete-Database {
 }
 
 function Tsql-List-Databases([switch] $verbose) {
-  $databaseName = $dbInfo.DatabaseName
   $dbH = $dbInfo.dbH
   $dbHNameSingular = $dbInfo.dbHNameSingular
   $dbHNamePlural = $dbInfo.dbHNamePlural
@@ -276,37 +269,37 @@ function Tsql-List-Databases([switch] $verbose) {
   # -W removes trailing spaces, -h -1 specifies no headers to be shown, https://msdn.microsoft.com/en-us/library/ms162773.aspx 
   $query = "SELECT name FROM master..sysdatabases WHERE name <> 'tempdb' AND name <> 'model' AND name <> 'msdb'"
   $queryResults = sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "$nocount;$query" -W -h -1
-  if ($queryResults -contains "$databaseName") {
+  if ($queryResults -contains "$($dbInfo.DatabaseName)") {
     # Get the version number
-    $versionNumber = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM $dbV WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
+    $versionNumber = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM $dbV WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
 	$versionNumber = $versionNumber -replace " ","."
 	
 	# Confirm we are looking at a database which has the build_type (introduced in 6.18)
-	$buildTypeExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "IF COL_LENGTH('$dbV','build_type') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	$buildTypeExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbV','build_type') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
 	if ($buildTypeExists -eq "EXISTS") {
 	  #Get the build type (case statement converts it from number to text)
-      $buildType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT CASE WHEN build_type = 1 THEN 'Titan/GeoLog Secure' WHEN build_type = 2 THEN 'Titan Standard' WHEN build_type = 4 THEN 'Insecure' ELSE 'Unknown' END FROM $dbV WHERE is_current=1" -W -h -1	
+      $buildType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT CASE WHEN build_type = 1 THEN 'Titan/GeoLog Secure' WHEN build_type = 2 THEN 'Titan Standard' WHEN build_type = 4 THEN 'Insecure' ELSE 'Unknown' END FROM $dbV WHERE is_current=1" -W -h -1	
 	  $buildType = " $buildType"
     }
 	
 	# Get the migration state as well (introduced in 6.25)
-	$migrationStageExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "IF COL_LENGTH('$dbV','mediaMigrationStage') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	$migrationStageExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbV','mediaMigrationStage') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
 	if ($migrationStageExists -eq "EXISTS") {
 	  #Get the build type (case statement converts it from number to text)
-      $migrationStage = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT mediaMigrationStage FROM $dbV WHERE is_current=1" -W -h -1	
+      $migrationStage = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT mediaMigrationStage FROM $dbV WHERE is_current=1" -W -h -1	
 	  $migrationStageText = " (migration stage $migrationStage)"
     }
 	
 	# Is it a Main or Backup Server
 	$snTypeText = " (Unknown server node type) Server"
-	$snExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "IF COL_LENGTH('$dbSn','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	$snExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbSn','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
 	if ($snExists -eq "EXISTS") {
 	  $ip = (gwmi Win32_NetworkAdapterConfiguration | ? { $_.IPAddress -ne $null }).ipaddress[0]
-	  $snCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbSn;SET NOCOUNT OFF" -W -h -1
-	  $snType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
+	  $snCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbSn;SET NOCOUNT OFF" -W -h -1
+	  $snType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
 	  if (($snType -eq 3) -and ($snCount -lt 3)) {
 	    $snTypeText = " Backup Server"
 	  }
@@ -325,34 +318,34 @@ function Tsql-List-Databases([switch] $verbose) {
 	  }
 	}
 	  
-	$queryResults = "$databaseName" + " " + $versionNumber + $buildType + $snTypeText + $migrationStageText
+	$queryResults = "$($dbInfo.DatabaseName)" + " " + $versionNumber + $buildType + $snTypeText + $migrationStageText
 	
-	$hCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbH" -W -h -1
-	$spCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbSp" -W -h -1
-	$vsCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbVS" -W -h -1
-	$aCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbA" -W -h -1
-	$aaCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAA" -W -h -1
+	$hCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbH" -W -h -1
+	$spCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbSp" -W -h -1
+	$vsCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbVS" -W -h -1
+	$aCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbA" -W -h -1
+	$aaCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAA" -W -h -1
 	$summaryText1 = "$hCount $dbHNamePlural, $vsCount $dbVSNamePlural, $spCount $dbSpNamePlural, $aCount $dbANamePlural ($aaCount $dbAANamePlural)"
 		
-	$caCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbCa" -W -h -1
-	$coCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbCo" -W -h -1
-	$rcCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbRc" -W -h -1
+	$caCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbCa" -W -h -1
+	$coCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbCo" -W -h -1
+	$rcCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbRc" -W -h -1
 	$summaryText2 = "$caCount $dbCaNamePlural, $coCount $dbCoNamePlural ($rcCount $dbRcNamePlural)"
 	
-	$apCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAp" -W -h -1
-	$zCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbZ" -W -h -1
+	$apCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAp" -W -h -1
+	$zCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbZ" -W -h -1
 	$summaryText3 = "$apCount $dbApNamePlural ($zCount $dbZNamePlural)"
 	
-	$mCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbM" -W -h -1
-	$moCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbMo" -W -h -1
+	$mCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbM" -W -h -1
+	$moCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbMo" -W -h -1
 	$summaryText4 = "$mCount $dbMNamePlural, $moCount $dbMoNamePlural"
 	
-	$auCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAu" -W -h -1
+	$auCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAu" -W -h -1
 	$summaryText5 = "$auCount $dbAuNamePlural"
 	
 	if ($verbose) {
 	  $verboseText1Heading = "$spCount $dbSpNamePlural:"
-	  $verboseText1Result = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON; $listDatabasesSpecialQuery1" -W -h -1
+	  $verboseText1Result = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON; $listDatabasesSpecialQuery1" -W -h -1
 	  $verboseText1 = $verboseText1Heading + $verboseText1Result
 	}
   }
@@ -373,21 +366,20 @@ function Tsql-List-Databases([switch] $verbose) {
 }
 
 function Tsql-Backup-Database() {
-  $databaseName = $dbInfo.DatabaseName
   $dbV = $dbInfo.dbV
   
   # backup up database to a folder called automatic backups
   # do not delete the database, this must be done manually
   $date = Get-Date -format yyyyMMdd_HHmmss
-  $versionNumber = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM $dbV WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
+  $versionNumber = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM $dbV WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
   $versionNumber = $versionNumber -replace " ","."
   $tag = $versionNumber + "_" + $date
   
-  $backupFile = "$databaseName_$tag.bak"
+  $backupFile = "$($dbInfo.DatabaseName)_$tag.bak"
   $backupLocation = "$tsqlAutomaticBackupLocation\$backupFile"
-  $backUpName = "$databaseName backup"
+  $backUpName = "$($dbInfo.DatabaseName) backup"
   Write-Host "Backing up to $backupFile"
-  Tsql "BACKUP DATABASE $databaseName TO DISK = '$backupLocation' WITH FORMAT, MEDIANAME = 'MyBackups', NAME = '$backupName'"
+  Tsql "BACKUP DATABASE $($dbInfo.DatabaseName) TO DISK = '$backupLocation' WITH FORMAT, MEDIANAME = 'MyBackups', NAME = '$backupName'"
 }
 
 function Tsql-Tips() {
