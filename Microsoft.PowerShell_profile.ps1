@@ -106,11 +106,15 @@ function Tsql-Export-Database($outfile) {
     Write-Host "Supply an outfile"
   }
   else {  
-    foreach ($tab in $dbInfo.Tables) {
-      Write-Host "Fetching from $tab"
-      "Fetching from $tab" >> $outfile
-      sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SELECT '$tab', * FROM $tab" >> $outfile
-    }
+    $tables = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name"
+	foreach ($table in $tables) {
+	  $tableName = $table.TrimEnd()
+	  if ($tableName.StartsWith("tbl")) {
+        Write-Host "Fetching from $tableName"
+        "Fetching from $tableName" >> $outfile
+        sqlcmd -S lpc:$pcName\SQLEXPRESS -d $databaseName -Q "SELECT '$tableName', * FROM $tableName" >> $outfile
+	  }
+	}
   }
 }
 
