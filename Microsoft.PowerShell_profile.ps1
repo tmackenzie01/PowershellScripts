@@ -548,6 +548,8 @@ function Svn-Checkout($repoPath, $codeFolder) {
   }
 }
 
+# Can use this with GetFiles & ForEach-Object
+# [io.directory]::GetFiles("C:\") | ForEach-Object { Rec-Time $_ }
 function Rec-Time {
   Param([Parameter(Mandatory=$true)] [String]$filename)
   $filenameOnly = [io.path]::GetFilename($filename)
