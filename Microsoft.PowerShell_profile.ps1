@@ -561,24 +561,24 @@ function Rec-Time {
   
   $totalMilliseconds = $total % 1000
   $totalMillisecondsText = $totalMilliseconds.ToString().PadLeft(3, '0')
-  Write-Host "MS : $totalMilliseconds $totalMillisecondsText"
+  #Write-Host "MS : $totalMilliseconds $totalMillisecondsText"
   
   $totalSeconds = $total / 1000
   $second = ($totalSeconds % 60)
   $second = [math]::floor($second)
   $secondText = $second.ToString().PadLeft(2, '0')
-  Write-Host "S : $secondText"
+  #Write-Host "S : $secondText"
   $totalMinutes = $totalSeconds / 60
   $minute = ($totalMinutes  % 60)
   $minute = [math]::floor($minute)
   $minuteText = $minute.ToString().PadLeft(2, '0')
-  Write-Host "M : $minuteText"
+  #Write-Host "M : $minuteText"
   $hour = ($totalMinutes / 60 )
   $hour = [math]::floor($hour) 
-  Write-Host "H : $hour"
+  #Write-Host "H : $hour"
   
   # Colon is a special character so wrap the preceding variable
-  return $filenameOnly + " == $day-$month-20$year ${hour}:${minuteText}:$secondText.$totalMilliseconds"
+  return "$day-$month-20$year ${hour}:${minuteText}:$secondText.$totalMilliseconds"
 }
 
 function sign ($filename) {
