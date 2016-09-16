@@ -580,7 +580,7 @@ function Rec-Time {
   #Write-Host "H : $hour"
   
   # Colon is a special character so wrap the preceding variable
-  return "$day-$month-20$year ${hour}:${minuteText}:$secondText.$totalMilliseconds"
+  return "$day-$month-20$year ${hour}:${minuteText}:$secondText.$totalMillisecondsText"
 }
 
 function sign ($filename) {
