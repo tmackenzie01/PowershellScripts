@@ -551,7 +551,7 @@ function Svn-Checkout($repoPath, $codeFolder) {
 # Can use this with GetFiles & ForEach-Object
 # [io.directory]::GetFiles("C:\") | ForEach-Object { Rec-Time $_ }
 function Rec-Time {
-  Param([Parameter(Mandatory=$true)] [String]$filename)
+  Param([Parameter(Mandatory=$true)] [String]$filename, [switch] $duration)
   $filenameOnly = [io.path]::GetFilename($filename)
   
   $year = $filenameOnly.SubString(0,2)
@@ -559,6 +559,7 @@ function Rec-Time {
   $day = $filenameOnly.SubString(4,2)
   
   $totalText = $filenameOnly.SubString(6, 8)
+  $durationText = $filenameOnly.SubString(16, 3)
   $total = [int]$totalText
   
   $totalMilliseconds = $total % 1000
@@ -579,8 +580,13 @@ function Rec-Time {
   $hour = [math]::floor($hour) 
   #Write-Host "H : $hour"
   
+  if ($duration) {
+    $durationSeconds = [int]$durationText
+    $finalurationText = " $durationSeconds seconds"
+  }
+  
   # Colon is a special character so wrap the preceding variable
-  return "$day-$month-20$year ${hour}:${minuteText}:$secondText.$totalMillisecondsText"
+  return "$day-$month-20$year ${hour}:${minuteText}:$secondText.$totalMillisecondsText$finalurationText"
 }
 
 function sign ($filename) {
