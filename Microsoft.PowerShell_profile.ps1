@@ -554,6 +554,10 @@ function Rec-Time {
   Param([Parameter(Mandatory=$true)] [String]$filename, [switch] $duration)
   $filenameOnly = [io.path]::GetFilename($filename)
   
+  if ($filenameOnly.EndsWith(".tmp")) {
+    $tempState = " *TEMP* "
+  }
+  
   $year = $filenameOnly.SubString(0,2)
   $month = $filenameOnly.SubString(2,2)
   $day = $filenameOnly.SubString(4,2)
@@ -586,7 +590,7 @@ function Rec-Time {
   }
   
   # Colon is a special character so wrap the preceding variable
-  return "$day-$month-20$year ${hour}:${minuteText}:$secondText.$totalMillisecondsText$finalurationText"
+  return "$day-$month-20$year ${hour}:${minuteText}:$secondText.$totalMillisecondsText$finalurationText$tempState"
 }
 
 function sign ($filename) {
