@@ -9,6 +9,7 @@ Set-Alias ildasm "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows\v10.0A\bin\NET
 Set-Alias nuget "${env:ProgramFiles(x86)}\Nuget\nuget.exe"
 Set-Alias mstest "${env:ProgramFiles(x86)}\Microsoft Visual Studio 14.0\Common7\IDE\MSTest.exe"
 Set-Alias ffmpeg "${env:ProgramFiles(x86)}\ffmpeg\bin\ffmpeg.exe"
+Set-Alias depends "${env:ProgramFiles(x86)}\Dependency Walker\Dependency Walker 2.2\depends.exe"
 
 # Global variables
 $tsqlBackupsLocation = "$mydocs\Customer DBs"
