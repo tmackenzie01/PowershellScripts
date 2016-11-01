@@ -297,7 +297,8 @@ function Tsql-List-Databases([switch] $verbose) {
   # -W removes trailing spaces, -h -1 specifies no headers to be shown, https://msdn.microsoft.com/en-us/library/ms162773.aspx 
   $query = "SELECT name FROM master..sysdatabases WHERE name <> 'tempdb' AND name <> 'model' AND name <> 'msdb'"
   $queryResults = sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "$nocount;$query" -W -h -1
-  if ($queryResults -contains "$($dbInfo.DatabaseName)") {
+  if ($queryResults -contains "$($dbInfo.DatabaseName)") {    
+    $databasePresent = $TRUE
     # Get the version number
     $versionNumber = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM $dbV WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
 	$versionNumber = $versionNumber -replace " ","."
@@ -377,19 +378,24 @@ function Tsql-List-Databases([switch] $verbose) {
 	  $verboseText1 = $verboseText1Heading + $verboseText1Result
 	}
   }
-  
-  Write-Host ""
-  Write-Host $queryResults
-  Write-Host ""
-  Write-Host $summaryText1
-  Write-Host $summaryText2
-  Write-Host $summaryText3
-  Write-Host $summaryText4
-  Write-Host $summaryText5
-  
-  if ($verbose) {
+    
+  if ($databasePresent -eq $TRUE) {
     Write-Host ""
-	Write-Host $verboseText1
+    Write-Host $queryResults
+    Write-Host ""
+    Write-Host $summaryText1
+    Write-Host $summaryText2
+    Write-Host $summaryText3
+    Write-Host $summaryText4
+    Write-Host $summaryText5
+  
+    if ($verbose) {
+      Write-Host ""
+	  Write-Host $verboseText1
+    }
+  }
+  else {
+    Write-Host $queryResults
   }
 }
 
