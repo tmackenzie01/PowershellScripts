@@ -488,26 +488,33 @@ function Synergy-Restart() {
   Synergy-Log
 }
 
-function BareTail($log) {
+function BareTail($log, [switch] $rfs, [switch] $server, [switch] $synergy) {
   $bareTailExe = "${env:ProgramFiles(x86)}\BareTail\baretail.exe"
   # Could have made this just an alias but wanted to have -RFS and -Synergy arguments
+  if ($rfs) {
+    $rfsLogsPath = "${env:ALLUSERSPROFILE}\Titan\Logs\RFS"
+	$rfsLogs = Get-ChildItem -Path $rfsLogsPath | Sort-Object LastWriteTime -descending | Select-Object -first 10
+	Write-Host $rfsLogs[0]
+	$firstLog = $rfsLogsPath + "\" + $rfsLogs[0]
+	Write-Host "Opening " $firstLog "..."
+    & $bareTailExe $firstLog
+	return
+  }
+  
+  if ($server) {
+	$serverMessages = "${env:ALLUSERSPROFILE}\Titan\Logs\ServerMessages.txt"
+	Write-Host "Opening " $serverMessages "..."
+    & $bareTailExe $serverMessages
+	return
+  }
+  
+  if ($log -Match 'Synergy') {
+    & $bareTailExe "C:\Program Files\Synergy\synergyd.log"
+	return
+  }
+  
   if ([string]::IsNullOrEmpty($log)) {
     & $bareTailExe
-  }
-  else {
-    if ($log -Match 'RFS') {
-	  $rfsLogsPath = "${env:ALLUSERSPROFILE}\Titan\Logs\RFS"
-	  $rfsLogs = Get-ChildItem -Path $rfsLogsPath | Sort-Object LastWriteTime -descending | Select-Object -first 10
-	  Write-Host $rfsLogs[0]
-	  $firstLog = $rfsLogsPath + "\" + $rfsLogs[0]
-	  Write-Host "Opening " $firstLog "..."
-      & $bareTailExe $firstLog
-	}
-	else {
-	  if ($log -Match 'Synergy') {
-	    & $bareTailExe "C:\Program Files\Synergy\synergyd.log"
-      }
-	}
   }
 }
 
