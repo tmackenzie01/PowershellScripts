@@ -76,7 +76,12 @@ function Help-Me() {
 # SQL Server functionality
 function Tsql {
   Param([Parameter(Mandatory=$true)] [String]$query,
-		[switch] $tidy)
+		[switch] $tidy,
+		[switch] $nodatabase)
+  if ($nodatabase) {
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -Q $query
+    return
+  }
   if ($tidy) {  
   
     $tempFile = [io.path]::GetTempFileName() 
