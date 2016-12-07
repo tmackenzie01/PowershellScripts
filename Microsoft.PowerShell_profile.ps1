@@ -15,6 +15,7 @@ Set-Alias depends "${env:ProgramFiles(x86)}\Dependency Walker\Dependency Walker 
 $tsqlBackupsLocation = "$mydocs\Customer DBs"
 $tsqlAutomaticBackupLocation = "$tsqlBackupsLocation\Automatic backups"
 $tsqlDemoRoomBackupLocation = "$tsqlBackupsLocation\Demo Room"
+$tsqlTBackupsLocation = "C:\ProgramData\Titan\Backups"
 $pcName = "$env:computername"
 $powershellIncludeDirectory = "${env:ProgramData}\WindowsPowerShell includes"
 
@@ -151,7 +152,8 @@ function Tsql-Open-Backups() {
   explorer $tsqlBackupsLocation
 }
 
-function Tsql-Restore-Backup ($backup) {
+function Tsql-Restore-Backup ($backup,
+		[switch] $previous) {
   $performRestore = $TRUE # Could just use $backup and check for null/empty, but good to have a boolean example in here
   $reason = ""
   $databaseDat = $dbInfo.DatabaseName + "_dat"
@@ -159,28 +161,36 @@ function Tsql-Restore-Backup ($backup) {
   
   # Check if database exists, don't restore if already exists
   if (!($queryResults -contains "$dbInfo.DatabaseName")) {
-    # If no parameter is passed in then look at the automatic backups
-	if ([string]::IsNullOrEmpty($backup)) {
-	  # No backup file supplied, list the most recent backups in the automatic backup folder
-      # prompt which one (by number) to restore
-	  Write-Host "Select a backup"
-      $files = Get-ChildItem -Path $tsqlAutomaticBackupLocation | Sort-Object LastWriteTime -descending | Select-Object -first 10
-	  [int]$fileCount = 1
-      ForEach ($f in $files) {
-	    Write-Host "$fileCount $f"
-		$fileCount++
-	  }
-	  $filesLength = $files.Length
-      [int]$val = Read-Host "Enter 1 to $filesLength to restore most recent backup" # Add error handling for non-ints later
+    # If previous switch set then use the latest database backup in 
+    if ($previous) {
+      $lastBackup = Get-ChildItem -Path $tsqlTBackupsLocation | Sort-Object LastWriteTime -descending | Select-Object -first 1
+      $backup = "$tsqlTBackupsLocation\" + $lastBackup
+      $performRestore = $TRUE
+	}
+	else {
+      # If no parameter is passed in then look at the automatic backups
+	  if ([string]::IsNullOrEmpty($backup)) {
+  	    # No backup file supplied, list the most recent backups in the automatic backup folder
+        # prompt which one (by number) to restore
+	    Write-Host "Select a backup"
+        $files = Get-ChildItem -Path $tsqlAutomaticBackupLocation | Sort-Object LastWriteTime -descending | Select-Object -first 10
+	    [int]$fileCount = 1
+        ForEach ($f in $files) {
+	      Write-Host "$fileCount $f"
+		  $fileCount++
+	    }
+	    $filesLength = $files.Length
+        [int]$val = Read-Host "Enter 1 to $filesLength to restore most recent backup" # Add error handling for non-ints later
 	  
-      if (($val -ge 1) -and ($val -le $filesLength)) {
-        $file = $files[$val - 1]
-        $backup = "$tsqlAutomaticBackupLocation\" + $file.Name
-		$performRestore = $TRUE
-      }
-      else {
-        $reason = "no valid backup selected"
-		$performRestore = $FALSE
+        if (($val -ge 1) -and ($val -le $filesLength)) {
+          $file = $files[$val - 1]
+          $backup = "$tsqlAutomaticBackupLocation\" + $file.Name
+		  $performRestore = $TRUE
+        }
+        else {
+          $reason = "no valid backup selected"
+		  $performRestore = $FALSE
+		}
       }
 	}
   }
