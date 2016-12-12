@@ -545,6 +545,15 @@ function CapturePreviousCommand() {
   $prev | clip
 }
 
+function RepeatPreviousCommand([Parameter(Mandatory=$true)] [String]$interval) {
+  $prev = (Get-History)[-1].CommandLine
+  while ($True) {
+	Write-Host ""
+    Invoke-Expression $prev
+    sleep $interval
+  }
+}
+
 function TidyUpTsql() {
   $tempFile = [io.path]::GetTempFileName() 
   Invoke-History >> $tempFile
