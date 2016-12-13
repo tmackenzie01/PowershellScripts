@@ -83,17 +83,21 @@ function Tsql {
     sqlcmd -S lpc:$pcName\SQLEXPRESS -Q $query
     return
   }
-  if ($tidy) {  
-  
+  if ($tidy) {    
     $tempFile = [io.path]::GetTempFileName() 
     sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q $query >> $tempFile
-    c:\users\tmackenzie01\source\repos\tsqltidyup\tsqltidyup\tsqltidyup\bin\debug\tsqltidyup.exe $tempFile
+	if ($tempFile.Contains("Sqlcmd: Error")) {
+	  Write-Host $tempFile
+    } else {
+      c:\users\tmackenzie01\source\repos\tsqltidyup\tsqltidyup\tsqltidyup\bin\debug\tsqltidyup.exe $tempFile
+	}
   }
   else {
     sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q $query
   }
   Write-Host $tsqlOutput
 }
+
 function Tsql-Show-Tables () {
   Param([String]$searchString,
 		[switch] $count)
@@ -548,7 +552,6 @@ function CapturePreviousCommand() {
 function RepeatPreviousCommand([Parameter(Mandatory=$true)] [String]$interval) {
   $prev = (Get-History)[-1].CommandLine
   while ($True) {
-	Write-Host ""
     Invoke-Expression $prev
     sleep $interval
   }
