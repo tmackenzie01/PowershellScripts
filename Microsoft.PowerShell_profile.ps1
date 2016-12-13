@@ -86,11 +86,7 @@ function Tsql {
   if ($tidy) {    
     $tempFile = [io.path]::GetTempFileName() 
     sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q $query >> $tempFile
-	if ($tempFile.Contains("Sqlcmd: Error")) {
-	  Write-Host $tempFile
-    } else {
-      c:\users\tmackenzie01\source\repos\tsqltidyup\tsqltidyup\tsqltidyup\bin\debug\tsqltidyup.exe $tempFile
-	}
+    c:\users\tmackenzie01\source\repos\tsqltidyup\tsqltidyup\tsqltidyup\bin\debug\tsqltidyup.exe $tempFile
   }
   else {
     sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q $query
