@@ -42,8 +42,14 @@ if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
   }
 }
 
-function Get-Args($script) {
+function prompt
+{
+    Write-Host ("PS " + $(get-date -format "dd-MMM-yyyy HH:mm") + " $pwd") -foregroundcolor White
+    return "> "
+}
+
   # Opens up or creates a script file for the specified $script file
+function Get-Args($script) {
   # test.ps1 -> ${env:ProgramData}\WindowsPowerShell includes\test_args.json
   $argsFile = $script -replace ".ps1","_args.json"
   $argsFile = "$powershellIncludeDirectory\$argsFile"
