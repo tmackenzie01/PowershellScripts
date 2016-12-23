@@ -15,7 +15,8 @@ Set-Alias depends "${env:ProgramFiles(x86)}\Dependency Walker\Dependency Walker 
 $tsqlBackupsLocation = "$mydocs\Customer DBs"
 $tsqlAutomaticBackupLocation = "$tsqlBackupsLocation\Automatic backups"
 $tsqlDemoRoomBackupLocation = "$tsqlBackupsLocation\Demo Room"
-$tsqlTBackupsLocation = "C:\ProgramData\Titan\Backups"
+$tsqlBackupsLocation = "C:\ProgramData\Titan\Backups"
+$tsqlMediaBackupsLocation = "C:\ProgramData\Titan\Media\Server\databases"
 $pcName = "$env:computername"
 $powershellIncludeDirectory = "${env:ProgramData}\WindowsPowerShell includes"
 
@@ -153,7 +154,8 @@ function Tsql-Open-Backups() {
 }
 
 function Tsql-Restore-Backup ($backup,
-		[switch] $previous) {
+		[switch] $previous,
+		[switch] $media) {
   $performRestore = $TRUE # Could just use $backup and check for null/empty, but good to have a boolean example in here
   $reason = ""
   $databaseDat = $dbInfo.DatabaseName + "_dat"
@@ -163,33 +165,49 @@ function Tsql-Restore-Backup ($backup,
   if (!($queryResults -contains "$dbInfo.DatabaseName")) {
     # If previous switch set then use the latest database backup in 
     if ($previous) {
-      $lastBackup = Get-ChildItem -Path $tsqlTBackupsLocation | Sort-Object LastWriteTime -descending | Select-Object -first 1
-      $backup = "$tsqlTBackupsLocation\" + $lastBackup
+      $lastBackup = Get-ChildItem -Path $tsqlBackupsLocation | Sort-Object LastWriteTime -descending | Select-Object -first 1
+      $backup = "$tsqlBackupsLocation\" + $lastBackup
+	  $fromBackup = "DISK = '$backup'"
       $performRestore = $TRUE
 	}
 	else {
-      # If no parameter is passed in then look at the automatic backups
-	  if ([string]::IsNullOrEmpty($backup)) {
-  	    # No backup file supplied, list the most recent backups in the automatic backup folder
-        # prompt which one (by number) to restore
-	    Write-Host "Select a backup"
-        $files = Get-ChildItem -Path $tsqlAutomaticBackupLocation | Sort-Object LastWriteTime -descending | Select-Object -first 10
-	    [int]$fileCount = 1
-        ForEach ($f in $files) {
-	      Write-Host "$fileCount $f"
-		  $fileCount++
-	    }
-	    $filesLength = $files.Length
-        [int]$val = Read-Host "Enter 1 to $filesLength to restore most recent backup" # Add error handling for non-ints later
+	  if ($media) {
+        $lastBackupFolder = Get-ChildItem -Path $tsqlMediaBackupsLocation | Sort-Object LastWriteTime -descending | Select-Object -first 1
+        $lastBackupParts = Get-ChildItem -Path $tsqlMediaBackupsLocation\$lastBackupFolder | Sort-Object Name
+		$fromBackup = ""
+		for($i=0; $i -lt ($lastBackupParts.length - 1); $i++) {
+		  $fromBackup = $fromBackup + "DISK = '" + $tsqlMediaBackupsLocation + "\" + $lastBackupFolder + "\" + $lastBackupParts[$i] + "', "
+		}
+		$fromBackup = $fromBackup + "DISK = '" + $tsqlMediaBackupsLocation + "\" + $lastBackupFolder + "\" + $lastBackupParts[$lastBackupParts.length - 1] + "'"
+		
+        $backup = "$lastBackupFolder\" + $lastBackup
+        $performRestore = $TRUE
+	  }
+	  else {
+        # If no parameter is passed in then look at the automatic backups
+	    if ([string]::IsNullOrEmpty($backup)) {
+  	      # No backup file supplied, list the most recent backups in the automatic backup folder
+          # prompt which one (by number) to restore
+	      Write-Host "Select a backup"
+          $files = Get-ChildItem -Path $tsqlAutomaticBackupLocation | Sort-Object LastWriteTime -descending | Select-Object -first 10
+	      [int]$fileCount = 1
+          ForEach ($f in $files) {
+	        Write-Host "$fileCount $f"
+		    $fileCount++
+	      }
+	      $filesLength = $files.Length
+          [int]$val = Read-Host "Enter 1 to $filesLength to restore most recent backup" # Add error handling for non-ints later
 	  
-        if (($val -ge 1) -and ($val -le $filesLength)) {
-          $file = $files[$val - 1]
-          $backup = "$tsqlAutomaticBackupLocation\" + $file.Name
-		  $performRestore = $TRUE
-        }
-        else {
-          $reason = "no valid backup selected"
-		  $performRestore = $FALSE
+          if (($val -ge 1) -and ($val -le $filesLength)) {
+            $file = $files[$val - 1]
+            $backup = "$tsqlAutomaticBackupLocation\" + $file.Name
+            $fromBackup = "DISK = '$backup'"
+		    $performRestore = $TRUE
+          }
+          else {
+            $reason = "no valid backup selected"
+		    $performRestore = $FALSE
+          }
 		}
       }
 	}
@@ -210,7 +228,7 @@ function Tsql-Restore-Backup ($backup,
     $query = "SELECT name FROM master..sysdatabases WHERE name <> 'tempdb' AND name <> 'model' AND name <> 'msdb'"
     $queryResults = sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "$nocount;$query" -W -h -1
     $move = "WITH MOVE '$databaseDat' TO '$mdf', MOVE '$databaseLog' TO '$ldf'"
-    sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "RESTORE DATABASE $($dbInfo.DatabaseName) FROM DISK = '$backup' $move"
+    sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "RESTORE DATABASE $($dbInfo.DatabaseName) FROM $fromBackup $move"
   }
   else {
     Write-Host "Restore not performed, $reason"
