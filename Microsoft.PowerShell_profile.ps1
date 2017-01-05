@@ -569,9 +569,12 @@ function CapturePreviousCommand() {
   $prev | clip
 }
 
-function RepeatPreviousCommand([Parameter(Mandatory=$true)] [String]$interval) {
+function RepeatPreviousCommand([Parameter(Mandatory=$true)] [String]$interval, [switch] $timestamp) {
   $prev = (Get-History)[-1].CommandLine
   while ($True) {
+    if ($timestamp) {
+	  get-date -format "dd-MMM-yyyy HH:mm:ss.fff"
+	}
     Invoke-Expression $prev
     sleep $interval
   }
