@@ -12,7 +12,7 @@ Set-Alias ffmpeg "${env:ProgramFiles(x86)}\ffmpeg\bin\ffmpeg.exe"
 Set-Alias depends "${env:ProgramFiles(x86)}\Dependency Walker\Dependency Walker 2.2\depends.exe"
 
 # Global variables
-$tsqlBackupsLocation = "$mydocs\Customer DBs"
+$tsqlCustomerBackupsLocation = "$mydocs\Customer DBs"
 $tsqlAutomaticBackupLocation = "$tsqlBackupsLocation\Automatic backups"
 $tsqlDemoRoomBackupLocation = "$tsqlBackupsLocation\Demo Room"
 $tsqlBackupsLocation = "C:\ProgramData\Titan\Backups"
@@ -156,7 +156,7 @@ function Tsql-Export-Database($outfile) {
 }
 
 function Tsql-Open-Backups() {
-  explorer $tsqlBackupsLocation
+  explorer $tsqlCustomerBackupsLocation
 }
 
 function Tsql-Restore-Backup ($backup,
@@ -166,6 +166,7 @@ function Tsql-Restore-Backup ($backup,
   $reason = ""
   $databaseDat = $dbInfo.DatabaseName + "_dat"
   $databaseLog = $dbInfo.DatabaseName + "_log"
+  $fromBackup = "DISK = '$backup'"
   
   # Check if database exists, don't restore if already exists
   if (!($queryResults -contains "$dbInfo.DatabaseName")) {
@@ -234,6 +235,7 @@ function Tsql-Restore-Backup ($backup,
     $query = "SELECT name FROM master..sysdatabases WHERE name <> 'tempdb' AND name <> 'model' AND name <> 'msdb'"
     $queryResults = sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "$nocount;$query" -W -h -1
     $move = "WITH MOVE '$databaseDat' TO '$mdf', MOVE '$databaseLog' TO '$ldf'"
+	Write-Host "RESTORE DATABASE $($dbInfo.DatabaseName) FROM $fromBackup $move"
     sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "RESTORE DATABASE $($dbInfo.DatabaseName) FROM $fromBackup $move"
   }
   else {
