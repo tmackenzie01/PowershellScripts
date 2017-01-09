@@ -13,8 +13,8 @@ Set-Alias depends "${env:ProgramFiles(x86)}\Dependency Walker\Dependency Walker 
 
 # Global variables
 $tsqlCustomerBackupsLocation = "$mydocs\Customer DBs"
-$tsqlAutomaticBackupLocation = "$tsqlBackupsLocation\Automatic backups"
-$tsqlDemoRoomBackupLocation = "$tsqlBackupsLocation\Demo Room"
+$tsqlAutomaticBackupLocation = "$tsqlCustomerBackupsLocation\Automatic backups"
+$tsqlDemoRoomBackupLocation = "$tsqlCustomerBackupsLocation\Demo Room"
 $tsqlBackupsLocation = "C:\ProgramData\Titan\Backups"
 $tsqlMediaBackupsLocation = "C:\ProgramData\Titan\Media\Server\databases"
 $pcName = "$env:computername"
