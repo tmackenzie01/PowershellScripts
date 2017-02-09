@@ -10,6 +10,8 @@ Set-Alias nuget "${env:ProgramFiles(x86)}\Nuget\nuget.exe"
 Set-Alias mstest "${env:ProgramFiles(x86)}\Microsoft Visual Studio 14.0\Common7\IDE\MSTest.exe"
 Set-Alias ffmpeg "${env:ProgramFiles(x86)}\ffmpeg\bin\ffmpeg.exe"
 Set-Alias depends "${env:ProgramFiles(x86)}\Dependency Walker\Dependency Walker 2.2\depends.exe"
+Set-Alias ProcessExplorer "${env:ProgramFiles(x86)}\ProcessExplorer\procexp.exe"
+Set-Alias pe "${env:ProgramFiles(x86)}\ProcessExplorer\procexp.exe"
 
 # Global variables
 $tsqlCustomerBackupsLocation = "$mydocs\Customer DBs"
