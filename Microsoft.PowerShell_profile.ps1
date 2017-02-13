@@ -292,7 +292,7 @@ function Tsql-Delete-Database {
   }
 }
 
-function Tsql-List-Databases([switch] $verbose) {
+function Tsql-List-Databases([switch] $verbose, [switch] $quick) {
   $dbH = $dbInfo.dbH
   $dbHNameSingular = $dbInfo.dbHNameSingular
   $dbHNamePlural = $dbInfo.dbHNamePlural
@@ -356,88 +356,104 @@ function Tsql-List-Databases([switch] $verbose) {
 	  $buildType = " $buildType"
     }
 	
-	# Get the migration state as well (introduced in 6.25)
-	$migrationStageExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbV','mediaMigrationStage') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	if ($quick) {
+	  # We just do the basic query
+	}
+	else {
+	  # Get the migration state as well (introduced in 6.25)
+	  $migrationStageExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbV','mediaMigrationStage') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
-	if ($migrationStageExists -eq "EXISTS") {
-	  #Get the build type (case statement converts it from number to text)
-      $migrationStage = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT mediaMigrationStage FROM $dbV WHERE is_current=1" -W -h -1	
-	  $migrationStageText = " (migration stage $migrationStage)"
-    }
+	  if ($migrationStageExists -eq "EXISTS") {
+	    #Get the build type (case statement converts it from number to text)
+        $migrationStage = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT mediaMigrationStage FROM $dbV WHERE is_current=1" -W -h -1	
+	    $migrationStageText = " (migration stage $migrationStage)"
+      }
 	
-	# Is it a Main or Backup Server
-	$snTypeText = " (Unknown server node type) Server"
-	$snExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbSn','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	  # Is it a Main or Backup Server
+	  $snTypeText = " (Unknown server node type) Server"
+	  $snExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbSn','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
-	if ($snExists -eq "EXISTS") {
-	  $thisIp = (gwmi Win32_NetworkAdapterConfiguration | ? { $_.IPAddress -ne $null } | Select-Object -first 1)
-	  $ip = $thisIp.IPAddress[0]
-	  $snCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbSn;SET NOCOUNT OFF" -W -h -1
-	  $snType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
-	  if (($snType -eq 3) -and ($snCount -lt 3)) {
-	    $snTypeText = " Backup Server"
-	  }
-	  else {
-	    if (($snType -eq 2) -and ($snCount -eq 2)) {
-  	      $snTypeText = " Main Server"
-		}
-		else {
-		  if ($snCount -eq 0) {
-			$snTypeText = " Standalone Server"
+	  if ($snExists -eq "EXISTS") {
+	    $thisIp = (gwmi Win32_NetworkAdapterConfiguration | ? { $_.IPAddress -ne $null } | Select-Object -first 1)
+	    $ip = $thisIp.IPAddress[0]
+	    $snCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbSn;SET NOCOUNT OFF" -W -h -1
+	    $snType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
+	    if (($snType -eq 3) -and ($snCount -lt 3)) {
+	      $snTypeText = " Backup Server"
+	    }
+	    else {
+	      if (($snType -eq 2) -and ($snCount -eq 2)) {
+  	        $snTypeText = " Main Server"
 		  }
 		  else {
-		    $snTypeText = " (Unknown server node type) Server ($snType)"
+		    if ($snCount -eq 0) {
+			  $snTypeText = " Standalone Server"
+		    }
+		    else {
+		      $snTypeText = " (Unknown server node type) Server ($snType)"
+		    }
 		  }
-		}
+	    }
 	  }
 	}
-	  
+	
 	$queryResults = "$($dbInfo.DatabaseName)" + " " + $versionNumber + $buildType + $snTypeText + $migrationStageText
 	
-	$hCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbH" -W -h -1
-	$spCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbSp" -W -h -1
-	$vsCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbVS" -W -h -1
-	$aCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbA" -W -h -1
-	$aaCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAA" -W -h -1
-	$summaryText1 = "$hCount $dbHNamePlural, $vsCount $dbVSNamePlural, $spCount $dbSpNamePlural, $aCount $dbANamePlural ($aaCount $dbAANamePlural)"
+	if ($quick) {
+	  # We just do the basic query
+	}
+	else {
+	  $hCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbH" -W -h -1
+	  $spCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbSp" -W -h -1
+	  $vsCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbVS" -W -h -1
+	  $aCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbA" -W -h -1
+	  $aaCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAA" -W -h -1
+	  $summaryText1 = "$hCount $dbHNamePlural, $vsCount $dbVSNamePlural, $spCount $dbSpNamePlural, $aCount $dbANamePlural ($aaCount $dbAANamePlural)"
 		
-	$caCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbCa" -W -h -1
-	$coCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbCo" -W -h -1
-	$rcCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbRc" -W -h -1
-	$summaryText2 = "$caCount $dbCaNamePlural, $coCount $dbCoNamePlural ($rcCount $dbRcNamePlural)"
+	  $caCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbCa" -W -h -1
+	  $coCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbCo" -W -h -1
+	  $rcCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbRc" -W -h -1
+	  $summaryText2 = "$caCount $dbCaNamePlural, $coCount $dbCoNamePlural ($rcCount $dbRcNamePlural)"
 	
-	$apCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAp" -W -h -1
-	$zCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbZ" -W -h -1
-	$summaryText3 = "$apCount $dbApNamePlural ($zCount $dbZNamePlural)"
+	  $apCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAp" -W -h -1
+	  $zCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbZ" -W -h -1
+	  $summaryText3 = "$apCount $dbApNamePlural ($zCount $dbZNamePlural)"
 	
-	$mCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbM" -W -h -1
-	$moCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbMo" -W -h -1
-	$summaryText4 = "$mCount $dbMNamePlural, $moCount $dbMoNamePlural"
+	  $mCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbM" -W -h -1
+	  $moCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbMo" -W -h -1
+	  $summaryText4 = "$mCount $dbMNamePlural, $moCount $dbMoNamePlural"
 	
-	$auCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAu" -W -h -1
-	$summaryText5 = "$auCount $dbAuNamePlural"
+	  $auCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbAu" -W -h -1
+	  $summaryText5 = "$auCount $dbAuNamePlural"
 	
-	if ($verbose) {
-	  $verboseText1Heading = "$spCount $dbSpNamePlural:"
-	  $verboseText1Result = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON; $listDatabasesSpecialQuery1" -W -h -1
-	  $verboseText1 = $verboseText1Heading + $verboseText1Result
+	  if ($verbose) {
+	    $verboseText1Heading = "$spCount $dbSpNamePlural:"
+	    $verboseText1Result = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON; $listDatabasesSpecialQuery1" -W -h -1
+	    $verboseText1 = $verboseText1Heading + $verboseText1Result
+	  }
 	}
   }
     
   if ($databasePresent -eq $TRUE) {
     Write-Host ""
     Write-Host $queryResults
-    Write-Host ""
-    Write-Host $summaryText1
-    Write-Host $summaryText2
-    Write-Host $summaryText3
-    Write-Host $summaryText4
-    Write-Host $summaryText5
-  
-    if ($verbose) {
+	
+	if ($quick) {
+	  # We just do the basic results
+	}
+	else {
       Write-Host ""
-	  Write-Host $verboseText1
-    }
+      Write-Host $summaryText1
+      Write-Host $summaryText2
+      Write-Host $summaryText3
+      Write-Host $summaryText4
+      Write-Host $summaryText5
+  
+      if ($verbose) {
+        Write-Host ""
+	    Write-Host $verboseText1
+      }
+	}
   }
   else {
     Write-Host $queryResults
