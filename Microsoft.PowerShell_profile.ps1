@@ -377,7 +377,7 @@ function Tsql-List-Databases([switch] $verbose, [switch] $quick) {
 	    $thisIp = (gwmi Win32_NetworkAdapterConfiguration | ? { $_.IPAddress -ne $null } | Select-Object -first 1)
 	    $ip = $thisIp.IPAddress[0]
 	    $snCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbSn;SET NOCOUNT OFF" -W -h -1
-	    $snType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
+	    $snType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn sn INNER JOIN tblServerConfiguration sc ON sn.server_ID = sc.ID WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
 	    if (($snType -eq 3) -and ($snCount -lt 3)) {
 	      $snTypeText = " Backup Server"
 	    }
