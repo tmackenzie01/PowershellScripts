@@ -199,7 +199,7 @@ function Tsql-Restore-Backup ($backup,
   	      # No backup file supplied, list the most recent backups in the automatic backup folder
           # prompt which one (by number) to restore
 	      Write-Host "Select a backup"
-          $files = Get-ChildItem -Path $tsqlAutomaticBackupLocation | Sort-Object LastWriteTime -descending | Select-Object -first 10
+          $files = Get-ChildItem -Path $tsqlAutomaticBackupLocation | Sort-Object LastWriteTime -descending | Select-Object -first 20
 	      [int]$fileCount = 1
           ForEach ($f in $files) {
 	        Write-Host "$fileCount $f"
