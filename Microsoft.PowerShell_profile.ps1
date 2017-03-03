@@ -240,6 +240,9 @@ function Tsql-Restore-Backup ($backup,
     $move = "WITH MOVE '$databaseDat' TO '$mdf', MOVE '$databaseLog' TO '$ldf'"
 	Write-Host "RESTORE DATABASE $($dbInfo.DatabaseName) FROM $fromBackup $move"
     sqlcmd -S lpc:$pcName\SQLEXPRESS -Q "RESTORE DATABASE $($dbInfo.DatabaseName) FROM $fromBackup $move"
+	
+	# Restore complete now list database version
+	Tsql-List-Databases -quick
   }
   else {
     Write-Host "Restore not performed, $reason"
@@ -334,6 +337,7 @@ function Tsql-List-Databases([switch] $verbose, [switch] $quick) {
   $dbSpNamePlural = $dbInfo.dbSpNamePlural
   $dbSn = $dbInfo.dbSn
   $dbV = $dbInfo.dbV
+  $dbSc = $dbInfo.dbSc
   $listDatabasesSpecialQuery1 = $dbInfo.listDatabasesSpecialQuery1
   
   # "SET NOCOUNT ON" means the "(N rows affected)" at the bottom of the query is not displayed
@@ -349,6 +353,8 @@ function Tsql-List-Databases([switch] $verbose, [switch] $quick) {
 	
 	# Confirm we are looking at a database which has the build_type (introduced in 6.18)
 	$buildTypeExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbV','build_type') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	# Confirm we are looking at a database which has the tblServerConfiguration (introduced in 6.34)
+	$serverConfigurationExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbSc','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
 	if ($buildTypeExists -eq "EXISTS") {
 	  #Get the build type (case statement converts it from number to text)
@@ -377,7 +383,11 @@ function Tsql-List-Databases([switch] $verbose, [switch] $quick) {
 	    $thisIp = (gwmi Win32_NetworkAdapterConfiguration | ? { $_.IPAddress -ne $null } | Select-Object -first 1)
 	    $ip = $thisIp.IPAddress[0]
 	    $snCount = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT COUNT(*) FROM $dbSn;SET NOCOUNT OFF" -W -h -1
-	    $snType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn sn INNER JOIN tblServerConfiguration sc ON sn.server_ID = sc.ID WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
+		if ($serverConfigurationExists -eq "EXISTS") {
+          $snType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn sn INNER JOIN $dbSc sc ON sn.server_ID = sc.ID WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
+		} else {
+		  $snType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
+		}
 	    if (($snType -eq 3) -and ($snCount -lt 3)) {
 	      $snTypeText = " Backup Server"
 	    }
