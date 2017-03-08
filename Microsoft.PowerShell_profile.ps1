@@ -354,7 +354,7 @@ function Tsql-List-Databases([switch] $verbose, [switch] $quick) {
 	# Confirm we are looking at a database which has the build_type (introduced in 6.18)
 	$buildTypeExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbV','build_type') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	# Confirm we are looking at a database which has the tblServerConfiguration (introduced in 6.34)
-	$serverConfigurationExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbSc','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
+	$serverConfigurationExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbSc','ID') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
 	
 	if ($buildTypeExists -eq "EXISTS") {
 	  #Get the build type (case statement converts it from number to text)
@@ -378,7 +378,7 @@ function Tsql-List-Databases([switch] $verbose, [switch] $quick) {
 	  # Is it a Main or Backup Server
 	  $snTypeText = " (Unknown server node type) Server"
 	  $snExists = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "IF COL_LENGTH('$dbSn','Name') IS NOT NULL BEGIN PRINT 'EXISTS' END" -W -h -1
-	
+		
 	  if ($snExists -eq "EXISTS") {
 	    $thisIp = (gwmi Win32_NetworkAdapterConfiguration | ? { $_.IPAddress -ne $null } | Select-Object -first 1)
 	    $ip = $thisIp.IPAddress[0]
@@ -388,6 +388,7 @@ function Tsql-List-Databases([switch] $verbose, [switch] $quick) {
 		} else {
 		  $snType = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT node_type FROM $dbSn WHERE ip = '$ip';SET NOCOUNT OFF" -W -h -1
 		}
+		
 	    if (($snType -eq 3) -and ($snCount -lt 3)) {
 	      $snTypeText = " Backup Server"
 	    }
