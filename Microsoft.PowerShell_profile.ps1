@@ -510,6 +510,7 @@ function Get-OEM($name) {
       "5" {$oemHint = "WS"}
       "6" {$oemHint = "N"}
       "7" {$oemHint = "A"}
+      "8" {$oemHint = "Ge Li"}
       default {$oemHint = "Unsupported"}
     }
     Write-Host "Current OEM is $oemValue - $oemHint"
