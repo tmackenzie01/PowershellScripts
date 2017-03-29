@@ -1,3 +1,5 @@
+param([Int32]$mapID=-1)
+
 # Load data
 Write-Host "Loading data..."
 if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
@@ -20,6 +22,11 @@ $dbMf = $dbInfo.dbMf
 $dbMfn = $dbInfo.dbMfn
 $dbMo = $dbInfo.dbMo
 $dbMoi = $dbInfo.dbMoi
+$whereClause = ""
+
+if ($mapID -gt -1) {
+  $whereClause = " WHERE mo.map_ID = $mapID"
+}
 
 tsql "SELECT mo.ID, mo.map_ID, mo.text, 
 mfnActive.filename AS activeMedia, 
@@ -34,4 +41,5 @@ LEFT OUTER JOIN $dbMf mfDisabled ON moi.disabled_media = mfDisabled.ID LEFT OUTE
 LEFT OUTER JOIN $dbMf mfIdle ON moi.idle_media = mfIdle.ID LEFT OUTER JOIN $dbMfn mfnIdle ON mfIdle.fileID = mfnIdle.ID 
 LEFT OUTER JOIN $dbMf mfTamper ON moi.tamper_media = mfTamper.ID LEFT OUTER JOIN $dbMfn mfnTamper ON mfTamper.fileID = mfnTamper.ID 
 LEFT OUTER JOIN $dbMf mfAccepted ON moi.accepted_media = mfAccepted.ID LEFT OUTER JOIN $dbMfn mfnAccepted ON mfAccepted.fileID = mfnAccepted.ID 
+$whereClause
 ORDER BY mo.ID, mo.map_ID, moi.ID"
