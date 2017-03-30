@@ -692,15 +692,12 @@ function Rec-Time {
 }
 
 function unzip ($zip, $dest) {
-Write-Host "1a $zip"
-Write-Host "1b $dest"
+  Write-Host "Unzipping $zip to $dest"
+  [System.Int32]$yesToAll = 16
   $shell = new-object -com shell.application
-  Write-Host "2"
   $zipNS = $shell.NameSpace($zip)
-  Write-Host "3"
   foreach($item in $zipNS.items()) {
-  Write-Host "4"
-    $shell.Namespace($dest).copyhere($item)
+    $shell.Namespace($dest).copyhere($item, $yesToAll)
   }
 }
 
