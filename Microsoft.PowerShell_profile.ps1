@@ -691,6 +691,19 @@ function Rec-Time {
   return "$day-$month-20$year ${hour}:${minuteText}:$secondText.$totalMillisecondsText$finalurationText$tempState"
 }
 
+function unzip ($zip, $dest) {
+Write-Host "1a $zip"
+Write-Host "1b $dest"
+  $shell = new-object -com shell.application
+  Write-Host "2"
+  $zipNS = $shell.NameSpace($zip)
+  Write-Host "3"
+  foreach($item in $zipNS.items()) {
+  Write-Host "4"
+    $shell.Namespace($dest).copyhere($item)
+  }
+}
+
 function sign ($filename) {
   $cert = @(gci cert:\currentuser\My -codesign)[0]
   Set-AuthenticodeSignature $filename $cert
