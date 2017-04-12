@@ -488,6 +488,11 @@ function Tsql-Backup-Database() {
   Tsql "BACKUP DATABASE $($dbInfo.DatabaseName) TO DISK = '$backupLocation' WITH FORMAT, MEDIANAME = 'MyBackups', NAME = '$backupName'"
 }
 
+function Tsql-Shrink-Database() {
+  tsql "DBCC SHRINKDATABASE($($dbInfo.DatabaseName))"
+  tsql "DBCC SHRINKFILE($($dbInfo.DatabaseName)_log)"
+}
+
 function Tsql-Tips() {
   # Some TSQL stuff which I always forget
   Write-Host "Get top 100 rows of a table:"
