@@ -565,6 +565,12 @@ function Synergy-Restart() {
   Synergy-Log
 }
 
+# Starts the Synergy UI configuration program (because I can never remember where it is)
+function Synergy-UI {
+  $synergyUIExe = "${env:ProgramFiles}\Synergy\synergy.exe"
+  & $synergyUIExe
+}
+
 function BareTail($log, [switch] $rfs, [switch] $server, [switch] $synergy) {
   $bareTailExe = "${env:ProgramFiles(x86)}\BareTail\baretail.exe"
   # Could have made this just an alias but wanted to have -RFS and -Synergy arguments
