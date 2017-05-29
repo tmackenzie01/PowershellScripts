@@ -69,7 +69,7 @@ if ($uninstallVersions) {
   Write-Host "Uninstall complete"
   return
 }
-return
+
 # If no version specified then we list the versions
 if (!$PSBoundParameters.ContainsKey('versionToInstall')) {
   $versionsToSort = @()
