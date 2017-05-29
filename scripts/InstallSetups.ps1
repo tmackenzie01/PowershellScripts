@@ -66,15 +66,49 @@ if (!$PSBoundParameters.ContainsKey('versionToInstall')) {
 
 #$version = "6.37.1"
 $version = $versionToInstall
-
-$versionA = $version
-$versionS = $version
-$versionC = $version
-$versionM = $version
+$versionObject = New-Object PSObject -Property @{
+  'Major' = $versionToInstall.split(".")[0]
+  'Minor' = $versionToInstall.split(".")[1]
+  'Revision' = $versionToInstall.split(".")[2]
+}
 
 # Create parent version folder
 $versionSplit = $version.Split(".")
 $parentVersion = $version.Replace($versionSplit[2], "x")
+
+# Work up from 0 to n where n is the revision in the version - not all will be at that version
+for($i=0; $i -le ($versionObject.Revision); $i++) {
+  $versionText = $versionObject.Major + "." + $versionObject.Minor + "." + $i
+  if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVA\$versionText") {
+    $versionA = $versionText
+    if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVA\$versionText\$programTVAExe")) {
+	  Write-Host "$programTVAExe not found for $versionA"; return
+	}
+  }  
+  if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVS\$versionText") {
+    $versionS = $versionText
+    if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVS\$versionText\$programTVSExe")) {
+	  Write-Host "$programTVSExe not found for $versionS"; return
+	}
+  }
+  if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVC\$versionText") {
+    $versionC = $versionText
+    if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVC\$versionText\$programTVCExe")) {
+	  Write-Host "$programTVCExe not found for $versionC"; return
+	}
+  }
+  if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVM\$versionText") {
+    $versionM = $versionText
+    if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVM\$versionText\$programTVMExe")) {
+	  Write-Host "$programTVMExe not found for $versionM"; return
+	}
+  }
+}
+
+Write-Host "$programTVA $versionA" 
+Write-Host "$programTVS $versionS" 
+Write-Host "$programTVC $versionC" 
+Write-Host "$programTVM $versionM"
 
 Write-Host "Installing $selectedFlavour $programTVA $versionA"
 & "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVA\$versionA\$programTVAExe" /silent /suppressmsgboxes | Out-Null
