@@ -1,4 +1,4 @@
-Param($versionToInstall)
+Param($versionToInstall, [switch]$uninstallVersions)
 # Scan gallery (add -TestGallery switch later)
 # Scan versions
 
@@ -36,11 +36,40 @@ $programTVAExe = $($localInfo.ProgramTVAExe)
 $programTVSExe = $($localInfo.ProgramTVSExe)
 $programTVCExe = $($localInfo.ProgramTVCExe)
 $programTVMExe = $($localInfo.ProgramTVMExe)
+
+$programFilesParentFolder = $($localInfo.ProgramFilesParentFolder)
+$programFilesFolderA = $($localInfo.ProgramFilesFolderA)
+$programFilesFolderS = $($localInfo.ProgramFilesFolderS)
+$programFilesFolderC = $($localInfo.ProgramFilesFolderC)
+$programFilesFolderM = $($localInfo.ProgramFilesFolderM)
+
 $flavours = $($localInfo.Flavours)
 $flavourFolderNames = $($localInfo.FlavourFolderNames)
 $selectedFlavour = $flavours[0]
 $selectedFlavourFolderName = $flavourFolderNames[0]
 
+if ($uninstallVersions) {
+  if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderA\unins000.exe") {
+    Write-Host "Uninstall $programTVA"
+    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderA\unins000.exe"
+  }
+  if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderS\unins000.exe") {
+    Write-Host "Uninstall $programTVS"
+    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderS\unins000.exe"
+  }
+  if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderC\unins000.exe") {
+    Write-Host "Uninstall $programTVC"
+    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderC\unins000.exe"
+  }
+  if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM\unins000.exe") {
+    Write-Host "Uninstall $programTVM"
+    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM\unins000.exe"
+  }
+  
+  Write-Host "Uninstall complete"
+  return
+}
+return
 # If no version specified then we list the versions
 if (!$PSBoundParameters.ContainsKey('versionToInstall')) {
   $versionsToSort = @()
