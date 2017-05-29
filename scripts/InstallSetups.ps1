@@ -105,10 +105,16 @@ for($i=0; $i -le ($versionObject.Revision); $i++) {
   }
 }
 
+Write-Host "Version detection is as follows: `n"
 Write-Host "$programTVA $versionA" 
 Write-Host "$programTVS $versionS" 
 Write-Host "$programTVC $versionC" 
 Write-Host "$programTVM $versionM"
+
+$confirmation = Read-Host "Do you want to install these versions? (y/n)"
+if ($confirmation -Match 'n') {
+  return
+}
 
 Write-Host "Installing $selectedFlavour $programTVA $versionA"
 & "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVA\$versionA\$programTVAExe" /silent /suppressmsgboxes | Out-Null
