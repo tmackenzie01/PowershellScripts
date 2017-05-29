@@ -1,3 +1,4 @@
+Param($versionToInstall)
 # Scan gallery (add -TestGallery switch later)
 # Scan versions
 
@@ -40,7 +41,31 @@ $flavourFolderNames = $($localInfo.FlavourFolderNames)
 $selectedFlavour = $flavours[0]
 $selectedFlavourFolderName = $flavourFolderNames[0]
 
-$version = "6.37.1"
+# If no version specified then we list the versions
+if (!$PSBoundParameters.ContainsKey('versionToInstall')) {
+  $versionsToSort = @()
+  $versionsX = Get-ChildItem "$galleryDir\$programTV\6*" | ForEach {
+    $versionsToSort += New-Object PSObject -Property @{
+    'Major' = 6
+    'Minor' = $_.Name.split(".")[1]
+    'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+    }
+  }
+
+  $versionsAvail = $versionsToSort | Sort-Object Major, MinorPL -descending | Select-Object Major, Minor | Select-Object -first 20
+
+  [int]$fileCount = 1
+  foreach ($versionAvail in $versionsAvail) {
+    $displayText = $fileCount.ToString().PadRight(4) + " " + $versionAvail.Major + "." + $versionAvail.Minor
+    Write-Host $displayText
+    $fileCount = $fileCount + 1
+  }
+  
+  return
+}
+
+#$version = "6.37.1"
+$version = $versionToInstall
 
 $versionA = $version
 $versionS = $version
@@ -53,9 +78,13 @@ $parentVersion = $version.Replace($versionSplit[2], "x")
 
 Write-Host "Installing $selectedFlavour $programTVA $versionA"
 & "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVA\$versionA\$programTVAExe" /silent /suppressmsgboxes | Out-Null
+if ($LastExitCode -ne 0) { Write-Host "Error"; return}
 Write-Host "Installing $selectedFlavour $programTVS $versionS"
 & "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVS\$versionS\$programTVSExe" /silent /suppressmsgboxes | Out-Null
+if ($LastExitCode -ne 0) { Write-Host "Error"; return}
 Write-Host "Installing $selectedFlavour $programTVC $versionC"
 & "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVC\$versionC\$programTVCExe" /silent /suppressmsgboxes | Out-Null
+if ($LastExitCode -ne 0) { Write-Host "Error"; return}
 Write-Host "Installing $selectedFlavour $programTVM $versionM"
 & "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVM\$versionM\$programTVMExe" /silent /suppressmsgboxes | Out-Null
+if ($LastExitCode -ne 0) { Write-Host "Error"; return}
