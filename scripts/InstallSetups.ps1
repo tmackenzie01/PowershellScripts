@@ -19,6 +19,7 @@ if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
     Write-Host "Local info not found"
   }
 }
+
 $galleryDir = $($localInfo.GalleryDir)
 $programTV = $($localInfo.ProgramTV)
 # Could put all these into arrays for A,S,C,M - but don't want to overcompliate things at the moment - maybe later
@@ -72,28 +73,79 @@ if ($uninstallVersions) {
 
 # If no version specified then we list the versions
 if (!$PSBoundParameters.ContainsKey('versionToInstall')) {
-  $versionsToSort = @()
+  $versionXobjs = @()
   $versionsX = Get-ChildItem "$galleryDir\$programTV\6*" | ForEach {
-    $versionsToSort += New-Object PSObject -Property @{
+    $versionXobjs += New-Object PSObject -Property @{
     'Major' = 6
     'Minor' = $_.Name.split(".")[1]
     'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
     }
   }
-
-  $versionsAvail = $versionsToSort | Sort-Object Major, MinorPL -descending | Select-Object Major, Minor | Select-Object -first 20
+  
+  $versionActualobjs = @()
+  foreach ($versionX in $versionXobjs) {
+    $parentVersion = $versionX.Major.toString() + "." + $versionX.Minor.toString() + ".x"
+	
+	# ?{ $_.PSIsContainer } gets directories only
+	if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVA") {
+      $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVA" | ?{ $_.PSIsContainer } | ForEach {
+        $versionActualobjs += New-Object PSObject -Property @{
+          'Major' = 6
+          'Minor' = $_.Name.split(".")[1]
+          'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+          'Revision' = $_.Name.split(".")[2]
+          'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
+		}
+	  }
+    }
+	if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVS") {
+      $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVS" | ?{ $_.PSIsContainer } | ForEach {
+        $versionActualobjs += New-Object PSObject -Property @{
+          'Major' = 6
+          'Minor' = $_.Name.split(".")[1]
+          'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+          'Revision' = $_.Name.split(".")[2]
+          'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
+		}
+	  }
+    }
+	if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVS") {
+      $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVC" | ?{ $_.PSIsContainer } | ForEach {
+        $versionActualobjs += New-Object PSObject -Property @{
+          'Major' = 6
+          'Minor' = $_.Name.split(".")[1]
+          'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+          'Revision' = $_.Name.split(".")[2]
+          'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
+		}
+	  }
+    }
+	if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVS") {
+      $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVM" | ?{ $_.PSIsContainer } | ForEach {
+        $versionActualobjs += New-Object PSObject -Property @{
+          'Major' = 6
+          'Minor' = $_.Name.split(".")[1]
+          'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+          'Revision' = $_.Name.split(".")[2]
+          'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
+		}
+	  }
+    }
+  }  
+  
+  $versionsAvail = $versionActualobjs | Sort-Object Major, MinorPL, RevisionPL -descending -unique | Select-Object Major, Minor, Revision -first 30
 
   [int]$fileCount = 1
   foreach ($versionAvail in $versionsAvail) {
-    $displayText = $fileCount.ToString().PadRight(4) + " " + $versionAvail.Major + "." + $versionAvail.Minor
+    $displayText = $fileCount.ToString().PadRight(4) + " " + $versionAvail.Major + "." + $versionAvail.Minor + "." + $versionAvail.Revision
     Write-Host $displayText
     $fileCount = $fileCount + 1
   }
   
-  return
+  $selection = Read-Host "Enter a single number for the version you wish to install"
+  $versionToInstall = $versionsAvail[$selection-1].Major.toString() + "." + $versionsAvail[$selection-1].Minor.toString() + "." + $versionsAvail[$selection-1].Revision.toString()
 }
 
-#$versionToInstall = "6.37.1"
 $versionObject = New-Object PSObject -Property @{
   'Major' = $versionToInstall.split(".")[0]
   'Minor' = $versionToInstall.split(".")[1]
@@ -117,7 +169,6 @@ if (($versionObject.Major -le 6) -and ($versionObject.Minor -lt 21)) {
 # Work up from 0 to n where n is the revision in the version - not all will be at that version
 for($i=0; $i -le ($versionObject.Revision); $i++) {
   $versionText = $versionObject.Major + "." + $versionObject.Minor + "." + $i
-  Write-Host "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVA\$versionText"
   if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVA\$versionText") {
     $versionA = $versionText
     if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVA\$versionText\$programTVAExe")) {
