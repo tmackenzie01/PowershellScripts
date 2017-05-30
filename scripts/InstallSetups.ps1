@@ -1,21 +1,15 @@
 Param($versionToInstall, [switch]$uninstallVersions)
-# Scan gallery (add -TestGallery switch later)
-# Scan versions
 
-# if version not supplied then prompt (last 10 versions)
-# if version supplied then confirm it exists, if not re-promt
-
-# Scan version flavours
-# Prompt for flavours
-# Install
+# Functionality to add
+#   Flavour selection
+#   Selection of listed versions
+#   TestGallery support
 
 # Load data
 Write-Host "Loading data..."
 if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
-  # Load db info
+  # Load local info
   # To access properties of $ localInfo when inside a string use "$($localInfo.DatabaseName)"
-  # For some reason I can't get this to work inside a sqlcmd call so have to
-  # use messy alias variables like in Tsql-List-Databases
   if (([System.IO.File]::Exists("$powershellIncludeDirectory\LocalInfo.json"))) {
     $dbInfoJson = Get-Content "$powershellIncludeDirectory\LocalInfo.json"
     $jsonSerializer = New-Object System.Web.Script.Serialization.JavaScriptSerializer
@@ -25,9 +19,9 @@ if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
     Write-Host "Local info not found"
   }
 }
-
 $galleryDir = $($localInfo.GalleryDir)
 $programTV = $($localInfo.ProgramTV)
+# Could put all these into arrays for A,S,C,M - but don't want to overcompliate things at the moment - maybe later
 $programTVA = $($localInfo.ProgramTVA)
 $programTVS = $($localInfo.ProgramTVS)
 $programTVC = $($localInfo.ProgramTVC)
