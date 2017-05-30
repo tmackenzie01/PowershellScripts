@@ -33,6 +33,7 @@ $programTVS = $($localInfo.ProgramTVS)
 $programTVC = $($localInfo.ProgramTVC)
 $programTVM = $($localInfo.ProgramTVM)
 $programTVAExe = $($localInfo.ProgramTVAExe)
+$programTVAOLdExe = $($localInfo.ProgramTVAOldExe)
 $programTVSExe = $($localInfo.ProgramTVSExe)
 $programTVCExe = $($localInfo.ProgramTVCExe)
 $programTVMExe = $($localInfo.ProgramTVMExe)
@@ -46,7 +47,12 @@ $programFilesFolderM = $($localInfo.ProgramFilesFolderM)
 $flavours = $($localInfo.Flavours)
 $flavourFolderNames = $($localInfo.FlavourFolderNames)
 $selectedFlavour = $flavours[0]
-$selectedFlavourFolderName = $flavourFolderNames[0]
+$selectedFlavourFolderName = $flavourFolderNames[0] + "\"
+
+$installA = $false
+$installS = $false
+$installC = $false
+$installM = $false
 
 if ($uninstallVersions) {
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderA\unins000.exe") {
@@ -93,8 +99,7 @@ if (!$PSBoundParameters.ContainsKey('versionToInstall')) {
   return
 }
 
-#$version = "6.37.1"
-$version = $versionToInstall
+#$versionToInstall = "6.37.1"
 $versionObject = New-Object PSObject -Property @{
   'Major' = $versionToInstall.split(".")[0]
   'Minor' = $versionToInstall.split(".")[1]
@@ -102,33 +107,44 @@ $versionObject = New-Object PSObject -Property @{
 }
 
 # Create parent version folder
-$versionSplit = $version.Split(".")
-$parentVersion = $version.Replace($versionSplit[2], "x")
+$parentVersion = $versionObject.Major + "." + $versionObject.Minor + ".x"
+
+# Check versions supports flavours (started 6.17)
+# This check doesn't work for single digit minor comparing to double digit minot (17)
+if (($versionObject.Major -le 6) -and ($versionObject.Minor -lt 17)) {
+  $selectedFlavourFolderName = "" # clear the flavour sub-folder
+}
+# Check versions supports flavours (started 6.17)
+# This check doesn't work for single digit minor comparing to double digit minot (21)
+if (($versionObject.Major -le 6) -and ($versionObject.Minor -lt 21)) {
+  $programTVAExe = $programTVAOldExe
+}
 
 # Work up from 0 to n where n is the revision in the version - not all will be at that version
 for($i=0; $i -le ($versionObject.Revision); $i++) {
   $versionText = $versionObject.Major + "." + $versionObject.Minor + "." + $i
-  if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVA\$versionText") {
+  Write-Host "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVA\$versionText"
+  if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVA\$versionText") {
     $versionA = $versionText
-    if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVA\$versionText\$programTVAExe")) {
+    if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVA\$versionText\$programTVAExe")) {
 	  Write-Host "$programTVAExe not found for $versionA"; return
 	}
   }  
-  if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVS\$versionText") {
+  if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVS\$versionText") {
     $versionS = $versionText
-    if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVS\$versionText\$programTVSExe")) {
+    if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVS\$versionText\$programTVSExe")) {
 	  Write-Host "$programTVSExe not found for $versionS"; return
 	}
   }
-  if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVC\$versionText") {
+  if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVC\$versionText") {
     $versionC = $versionText
-    if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVC\$versionText\$programTVCExe")) {
+    if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVC\$versionText\$programTVCExe")) {
 	  Write-Host "$programTVCExe not found for $versionC"; return
 	}
   }
-  if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVM\$versionText") {
+  if (Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVM\$versionText") {
     $versionM = $versionText
-    if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVM\$versionText\$programTVMExe")) {
+    if (!(Test-Path "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVM\$versionText\$programTVMExe")) {
 	  Write-Host "$programTVMExe not found for $versionM"; return
 	}
   }
@@ -140,20 +156,47 @@ Write-Host "$programTVS $versionS"
 Write-Host "$programTVC $versionC" 
 Write-Host "$programTVM $versionM"
 
-$confirmation = Read-Host "Do you want to install these versions? (y/n)"
+$confirmation = Read-Host "Do you want to install these versions? (y/n) Or a selection (s)"
 if ($confirmation -Match 'n') {
   return
+} else {
+  if ($confirmation -Match 's') {
+	Write-Host "`n1   Admin"
+	Write-Host "2   Server"
+	Write-Host "3   Client"
+	Write-Host "4   Multiplexer"
+    $selection = Read-Host "Enter a single number or CSV list of numbers for the programs you wish to install"
+	foreach($singleSelection in $selection.split(",")) {
+	  if ($singleSelection.trim() -eq 1) { $installA = $true }
+	  if ($singleSelection.trim() -eq 2) { $installS = $true }
+	  if ($singleSelection.trim() -eq 3) { $installC = $true }
+	  if ($singleSelection.trim() -eq 4) { $installM = $true }
+	}
+  } else {
+    $installA = $true
+    $installS = $true
+    $installC = $true
+    $installM = $true
+  }
 }
 
-Write-Host "Installing $selectedFlavour $programTVA $versionA"
-& "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVA\$versionA\$programTVAExe" /silent /suppressmsgboxes | Out-Null
-if ($LastExitCode -ne 0) { Write-Host "Error"; return}
-Write-Host "Installing $selectedFlavour $programTVS $versionS"
-& "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVS\$versionS\$programTVSExe" /silent /suppressmsgboxes | Out-Null
-if ($LastExitCode -ne 0) { Write-Host "Error"; return}
-Write-Host "Installing $selectedFlavour $programTVC $versionC"
-& "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVC\$versionC\$programTVCExe" /silent /suppressmsgboxes | Out-Null
-if ($LastExitCode -ne 0) { Write-Host "Error"; return}
-Write-Host "Installing $selectedFlavour $programTVM $versionM"
-& "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName\$programTVM\$versionM\$programTVMExe" /silent /suppressmsgboxes | Out-Null
-if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+if ($installA -eq $true) {
+  Write-Host "Installing $selectedFlavour $programTVA $versionA"
+  & "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVA\$versionA\$programTVAExe" /silent /suppressmsgboxes | Out-Null
+  if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+}
+if ($installS -eq $true) {
+  Write-Host "Installing $selectedFlavour $programTVS $versionS"
+  & "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVS\$versionS\$programTVSExe" /silent /suppressmsgboxes | Out-Null
+  if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+}
+if ($installC -eq $true) {
+  Write-Host "Installing $selectedFlavour $programTVC $versionC"
+  & "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVC\$versionC\$programTVCExe" /silent /suppressmsgboxes | Out-Null
+  if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+}
+  if ($installM -eq $true) {
+  Write-Host "Installing $selectedFlavour $programTVM $versionM" 
+  & "$galleryDir\$programTV\$parentVersion\$selectedFlavourFolderName$programTVM\$versionM\$programTVMExe" /silent /suppressmsgboxes | Out-Null
+  if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+}
