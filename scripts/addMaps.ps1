@@ -24,8 +24,8 @@ $dbMoi = $dbInfo.dbMoi
 $i = 1;
 $j = 1;
 
-$mapLimit = 300;
-$iconsPerMap = 10;
+$mapLimit = 400;
+$iconsPerMap = 50;
 
 do 
 {  
@@ -42,22 +42,30 @@ do
   #Write-Host "Copy map to $mapDest"
   $mapDest = "C:\Program Files (x86)\Titan\Vision Server\sites\default\maps\$i.png"
   Copy-Item D:\map1.png $mapDest
+  
+    [int]$iconRandomRange = 5
 
   $j = 1;
+  $mapObjectIncrement = 1;
   do
   {
-    $iconFilename = "$i $j.png"
-	#Write-Host "Icon filename is $iconFilename"
+	$mapObjectIncrement = $mapObjectIncrement + 1
+	
+    $iconDigit1 = Get-Random -Maximum $iconRandomRange -Minimum 1
+    $iconDigit2 = Get-Random -Maximum $iconRandomRange -Minimum 1
+    $iconFilename = "$iconDigit1 $iconDigit2.png"
+	Write-Host "Icon filename is $iconFilename $iconRandomRange $iconDigit1 $iconDigit2"
   
     # Icon image
-    tsql "INSERT INTO $dbMf VALUES ('\\127.0.0.1\VISION\maps\icons\$iconFilename')"
-    $newImageID = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT TOP 1 ID FROM $dbMf WHERE filename = '\\127.0.0.1\VISION\maps\icons\$iconFilename';SET NOCOUNT OFF" -W -h -1
-    #Write-Host "Added icon image \\127.0.0.1\VISION\maps\icons\$iconFilename, ID $newImageID"
+	$fullFilename = "\\127.0.0.1\VISION\maps\icons\$iconFilename"
+    tsql "IF NOT EXISTS (SELECT * FROM $dbMf WHERE filename = '$fullFilename') BEGIN INSERT INTO $dbMf VALUES ('$fullFilename') END"
+    $newImageID = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT TOP 1 ID FROM $dbMf WHERE filename = '$fullFilename';SET NOCOUNT OFF" -W -h -1
+    #Write-Host "Added icon image $fullFilename, ID $newImageID"
   
     # Icon (part 1)
-    tsql "INSERT INTO $dbMo VALUES (20, $i, $newMapID, 'New generic button', 1, '', 0, 2)"
-    $newMapObjectID = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT TOP 1 ID FROM $dbMo WHERE selfuid = $i;SET NOCOUNT OFF" -W -h -1
-    #Write-Host "Added icon object ID $newMapObjectID"
+    tsql "INSERT INTO $dbMo VALUES (20, $mapObjectIncrement, $newMapID, 'New generic button', 1, '', 0, 2)"
+    $newMapObjectID = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT TOP 1 ID FROM $dbMo WHERE selfuid = $mapObjectIncrement;SET NOCOUNT OFF" -W -h -1
+    Write-Host "Added icon object ID $newMapObjectID"
     
     # Icon (part 2)
     tsql "INSERT INTO $dbMoi VALUES ($newMapObjectID, 11, 11, 24, 24, NULL, NULL, $newImageID, NULL, NULL)"
