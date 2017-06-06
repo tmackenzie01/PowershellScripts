@@ -14,8 +14,9 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
   $fullSource = "$rootFolder\$source"
   
   $project = $sourceSplit[0]
-  Write-Host "Copy $project dlls to $dest ..."
+  Write-Host "Copy $project dlls (and pdbs) to $dest ..."
   $dest = "$rootFolder\$dest\Dependencies_svn\dlls\internal"
+  Write-Host "     ($dest)"
   $json = Get-Content "$powershellIncludeDirectory\CodeComponents.json"
   $ser = New-Object System.Web.Script.Serialization.JavaScriptSerializer
   $obj = $ser.DeserializeObject($json)
@@ -27,21 +28,36 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
   }
   
   $fileCopyCount = 0
+  $output = ""
+  $errorOutput = ""
+  $releaseDllsNewer = $false
 
   foreach ($dll in $obj.$project) {
     if ($dll.dll) {
       $dllFile = $dll.dll
       $dllPath = $dll.path
 	  $dllPath = "$fullSource\source\$dllPath"
-	  	  
 	  $sourceDll = "$dllPath\$dllFile"
+	  $releaseSourceDll = $sourceDll -replace "\\Debug\\", "\Release\"
+
+	  # Get times of source and release dlls
+	  $sourceDllLastWrite = (Get-ChildItem $sourceDll).LastWriteTime
+	  $releaseSourceDllLastWrite = (Get-ChildItem $releaseSourceDll).LastWriteTime
+
 	  $dllFolder = $dest
-      Write-Host "$sourceDll -> $dllFolder"
-      Copy-Item $sourceDll $dllFolder -errorAction Stop
-	  $fileCopyCount = $fileCopyCount + 1
-      $sourcePdb = $sourceDll -replace ".dll",".pdb"
-      Copy-Item $sourcePdb $dllFolder
-	  $fileCopyCount = $fileCopyCount + 1
+	  $copyText = "$sourceDll -> $dllFolder"
+	  if ($sourceDllLastWrite -le $releaseSourceDllLastWrite) {
+        $errorOutput = $errorOutput + "$sourceDll`n"
+        $releaseDllsNewer = $true
+      } else {
+        $output = $output + "$sourceDll`n"
+
+        Copy-Item $sourceDll $dllFolder -errorAction Stop
+        $fileCopyCount = $fileCopyCount + 1
+        $sourcePdb = $sourceDll -replace ".dll",".pdb"
+        Copy-Item $sourcePdb $dllFolder
+        $fileCopyCount = $fileCopyCount + 1
+      }
     }
     else {
       Write-Host "Project dlls for $project not recognised"
@@ -49,8 +65,15 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
     }
   }
   
+  Write-Host $output -foregroundcolor yellow
+
+  if ($releaseDllsNewer) {
+    Write-Host "Some dlls have been built more recently as release, copy has not been performed" -foregroundcolor red
+	Write-Host $errorOutput -foregroundcolor red
+  }
+
   if ($fileCopyCount -eq 0) {
-    Write-Host "No files copied"
+    Write-Host "No files copied" -foregroundcolor red
 	exit
   }
 }
