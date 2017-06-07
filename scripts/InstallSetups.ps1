@@ -1,3 +1,19 @@
+<#
+.SYNOPSIS
+Installs/uninstalls programs from official Gallery & TestGallery
+
+.EXAMPLE
+./InstallSetups.ps1 6.37
+Installs 6.37 from the official Gallery (will find the latest 6.37.x version for each component) and then prompt which component you want installed
+
+.EXAMPLE
+./InstallSetups.ps1 -uninstallVersions
+Uninstalls all versions of installed programs
+
+.LINK
+http://github.com/tmackenzie01/PowershellScripts
+#>
+
 Param($versionToInstall, [switch]$uninstallVersions, [switch]$testGallery, [switch]$testGallery7)
 
 # Functionality to add

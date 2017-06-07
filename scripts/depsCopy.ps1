@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+Copies debug output dlls from built projects to the dependencies of other solutions
+
+.DESCRIPTION
+Requires local JSON files
+CodeComponents.json (describes structure of solutions, their projects and output paths to dlls)
+depsCopy_args.json (describes which projects to copy dlls from and to)
+
+.EXAMPLE
+./depsCopy_args.ps1
+
+.EXAMPLE
+./depsCopy_args.ps1 -revert
+
+.LINK
+http://github.com/tmackenzie01/PowershellScripts
+#>
+
 Param([switch] $revert)
 
 [System.Reflection.Assembly]::LoadWithPartialName("System.Web.Extensions") > $null
