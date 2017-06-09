@@ -3,6 +3,14 @@
 Installs/uninstalls programs from official Gallery & TestGallery
 
 .EXAMPLE
+./InstallSetups.ps1
+Will list most recent 20 versions in Gallery
+
+.EXAMPLE
+./InstallSetups.ps1 -testGallery
+Will list most recent 20 versions in Test Gallery
+
+.EXAMPLE
 ./InstallSetups.ps1 6.37
 Installs 6.37 from the official Gallery (will find the latest 6.37.x version for each component) and then prompt which component you want installed
 
@@ -10,11 +18,15 @@ Installs 6.37 from the official Gallery (will find the latest 6.37.x version for
 ./InstallSetups.ps1 -uninstallVersions
 Uninstalls all versions of installed programs
 
+.EXAMPLE
+./InstallSetups.ps1 -flavour <Flavourname>
+Allows specification of flavour, can be in quotes with spaces, or no quotes and no spaces
+
 .LINK
 http://github.com/tmackenzie01/PowershellScripts
 #>
 
-Param($versionToInstall, [switch]$uninstallVersions, [switch]$testGallery, [switch]$testGallery7, $flavour)
+Param($versionToInstall, [switch]$uninstallVersions, [switch]$gallery7, [switch]$testGallery, [switch]$testGallery7, $flavour)
 
 # Functionality to add
 #   Flavour selection
@@ -123,12 +135,19 @@ if ($uninstallVersions) {
 
 # Skip this part for the testGallery switch for now
 
+$searchVersion = 6
+if ($gallery7) {
+  $searchVersion = 7
+  $programTVM = $programTVM + "7"
+  $programTVC = $programTVC + "7"
+}
+
 # If no version specified then we list the versions
 if ((!$PSBoundParameters.ContainsKey('versionToInstall')) -and (!$PSBoundParameters.ContainsKey('testGallery')) -and (!$PSBoundParameters.ContainsKey('testGallery7'))) {
   $versionXobjs = @()
-  $versionsX = Get-ChildItem "$galleryDir\$programTV\6*" | ForEach {
+  $versionsX = Get-ChildItem "$galleryDir\$programTV\$searchVersion*" | ForEach {
     $versionXobjs += New-Object PSObject -Property @{
-    'Major' = 6
+    'Major' = $searchVersion
     'Minor' = $_.Name.split(".")[1]
     'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
     }
@@ -142,7 +161,7 @@ if ((!$PSBoundParameters.ContainsKey('versionToInstall')) -and (!$PSBoundParamet
 	if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA") {
       $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA" | ?{ $_.PSIsContainer } | ForEach {
         $versionActualobjs += New-Object PSObject -Property @{
-          'Major' = 6
+          'Major' = $searchVersion
           'Minor' = $_.Name.split(".")[1]
           'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
           'Revision' = $_.Name.split(".")[2]
@@ -153,7 +172,7 @@ if ((!$PSBoundParameters.ContainsKey('versionToInstall')) -and (!$PSBoundParamet
 	if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS") {
       $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS" | ?{ $_.PSIsContainer } | ForEach {
         $versionActualobjs += New-Object PSObject -Property @{
-          'Major' = 6
+          'Major' = $searchVersion
           'Minor' = $_.Name.split(".")[1]
           'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
           'Revision' = $_.Name.split(".")[2]
@@ -161,10 +180,10 @@ if ((!$PSBoundParameters.ContainsKey('versionToInstall')) -and (!$PSBoundParamet
 		}
 	  }
     }
-	if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS") {
+	if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC") {
       $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC" | ?{ $_.PSIsContainer } | ForEach {
         $versionActualobjs += New-Object PSObject -Property @{
-          'Major' = 6
+          'Major' = $searchVersion
           'Minor' = $_.Name.split(".")[1]
           'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
           'Revision' = $_.Name.split(".")[2]
@@ -172,10 +191,10 @@ if ((!$PSBoundParameters.ContainsKey('versionToInstall')) -and (!$PSBoundParamet
 		}
 	  }
     }
-	if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS") {
+	if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM") {
       $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM" | ?{ $_.PSIsContainer } | ForEach {
         $versionActualobjs += New-Object PSObject -Property @{
-          'Major' = 6
+          'Major' = $searchVersion
           'Minor' = $_.Name.split(".")[1]
           'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
           'Revision' = $_.Name.split(".")[2]
