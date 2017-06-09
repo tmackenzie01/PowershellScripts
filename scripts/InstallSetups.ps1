@@ -14,7 +14,7 @@ Uninstalls all versions of installed programs
 http://github.com/tmackenzie01/PowershellScripts
 #>
 
-Param($versionToInstall, [switch]$uninstallVersions, [switch]$testGallery, [switch]$testGallery7)
+Param($versionToInstall, [switch]$uninstallVersions, [switch]$testGallery, [switch]$testGallery7, $flavour)
 
 # Functionality to add
 #   Flavour selection
@@ -60,13 +60,33 @@ $programFilesFolderM7 = $($localInfo.ProgramFilesFolderM7)
 
 $flavours = $($localInfo.Flavours)
 $flavourFolderNames = $($localInfo.FlavourFolderNames)
-$selectedFlavour = $flavours[0]
-$selectedFlavourFolderName = $flavourFolderNames[0] + "\"
 
 $installA = $false
 $installS = $false
 $installC = $false
 $installM = $false
+
+$flavourIndex = 0
+$matchFound = $false
+if ($PSBoundParameters.ContainsKey('flavour')) {
+  $specifiedFlavour = $flavour
+  for($i=0; $i -lt $flavours.Count; $i++) {
+    $flavourToCheck = $flavours[$i];
+    if (($specifiedFlavour -eq $flavourToCheck) -or ($specifiedFlavour -eq $flavourToCheck.Replace(" ", ""))) {
+      $flavourIndex = $i
+	  $matchFound = $true
+	  Write-Host "Installing programs for specified flavour - $specifiedFlavour"
+	}
+  }
+
+  if (!$matchFound) {
+    Write-Host "Could not find specified flavour - $specifiedFlavour"
+	return
+  }
+}
+
+$selectedFlavour = $flavours[$flavourIndex]
+$selectedFlavourFolderName = $flavourFolderNames[$flavourIndex] + "\"
 
 if ($uninstallVersions) {
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderA\unins000.exe") {
