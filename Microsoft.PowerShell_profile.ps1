@@ -586,11 +586,9 @@ function BareTail($log, [switch] $rfs, [switch] $server, [switch] $synergy, [swi
     } else {
       $logsPath = "$mydocs\WindowsPowerShell\transcripts"
     }
-	$logs = Get-ChildItem -Path $logsPath | Sort-Object LastWriteTime -descending | Select-Object -first 10
-	Write-Host $logs[0]
-	$firstLog = $logsPath + "\" + $logs[0]
-	Write-Host "Opening " $firstLog "..."
-    & $bareTailExe $firstLog
+	$firstLog = Get-ChildItem -Path $logsPath | Sort-Object LastWriteTime -descending | Select-Object -first 1
+	Write-Host "Opening " $firstLog.FullName "..."
+    & $bareTailExe $firstLog.FullName
 	return
   }
   
