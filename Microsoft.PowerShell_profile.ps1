@@ -1,3 +1,7 @@
+# Start the transcript first
+$transcriptFile = "$mydocs\WindowsPowerShell\transcripts\" + $(get-date -format "yyyyMMdd_HHmmssfff") + ".txt";
+Start-Transcript -Path $transcriptFile -NoClobber
+
 $major = $PSVersionTable.PSVersion.Major
 $minor = $PSVersionTable.PSVersion.Minor
 Write-Host "Loading profile for PowerShell $major.$minor" 
@@ -21,6 +25,7 @@ $tsqlBackupsLocation = "C:\ProgramData\Titan\Backups"
 $tsqlMediaBackupsLocation = "C:\ProgramData\Titan\Media\Server\databases"
 $pcName = "$env:computername"
 $powershellIncludeDirectory = "${env:ProgramData}\WindowsPowerShell includes"
+
 
 # Dependencies
 Write-Host "Loading dependencies..."
