@@ -94,19 +94,20 @@ function Tsql {
 		[switch] $tidy,
 		[switch] $nodatabase)
   if ($nodatabase) {
-    sqlcmd -S lpc:$pcName\SQLEXPRESS -Q $query
-    return
+    $tsqlOutput = sqlcmd -S lpc:$pcName\SQLEXPRESS -Q $query
+    return $tsqlOutput
   }
-  if ($tidy) {    
-    $tempFile = [io.path]::GetTempFileName() 
+  if ($tidy) {
+    $tempFile = [io.path]::GetTempFileName()
     sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q $query >> $tempFile
-    c:\users\tmackenzie01\source\repos\tsqltidyup\tsqltidyup\tsqltidyup\bin\debug\tsqltidyup.exe $tempFile
+    $tsqlOutput = c:\users\tmackenzie01\source\repos\tsqltidyup\tsqltidyup\tsqltidyup\bin\debug\tsqltidyup.exe $tempFile
 	Remove-Item $tempFile
   }
   else {
-    sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q $query
+    $tsqlOutput = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q $query
   }
-  Write-Host $tsqlOutput
+
+  return $tsqlOutput
 }
 
 function Tsql-Show-Tables () {
