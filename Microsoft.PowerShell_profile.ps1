@@ -576,14 +576,18 @@ function Synergy-UI {
   & $synergyUIExe
 }
 
-function BareTail($log, [switch] $rfs, [switch] $server, [switch] $synergy) {
+function BareTail($log, [switch] $rfs, [switch] $server, [switch] $synergy, [switch] $transcript) {
   $bareTailExe = "${env:ProgramFiles(x86)}\BareTail\baretail.exe"
   # Could have made this just an alias but wanted to have -RFS and -Synergy arguments
-  if ($rfs) {
-    $rfsLogsPath = "${env:ALLUSERSPROFILE}\Titan\Logs\RFS"
-	$rfsLogs = Get-ChildItem -Path $rfsLogsPath | Sort-Object LastWriteTime -descending | Select-Object -first 10
-	Write-Host $rfsLogs[0]
-	$firstLog = $rfsLogsPath + "\" + $rfsLogs[0]
+  if ($rfs -or $transcript) {
+    if ($rfs) {
+      $logsPath = "${env:ALLUSERSPROFILE}\Titan\Logs\RFS"
+    } else {
+      $logsPath = "$mydocs\WindowsPowerShell\transcripts"
+    }
+	$logs = Get-ChildItem -Path $logsPath | Sort-Object LastWriteTime -descending | Select-Object -first 10
+	Write-Host $logs[0]
+	$firstLog = $logsPath + "\" + $logs[0]
 	Write-Host "Opening " $firstLog "..."
     & $bareTailExe $firstLog
 	return
