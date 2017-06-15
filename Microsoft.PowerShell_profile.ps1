@@ -740,7 +740,7 @@ function Get-DllEntryPoints($dllPath, [switch] $raw) {
         if ($_.length -gt 0) {
           # Trim after the equals
           $trimmedLine = $_.Substring(0, $_.lastIndexOf('='))
-          $output = $output + $trimmedLine + "`n"
+          $output = $output + $trimmedLine + "`r`n"
         }
       }
       if ($_ -like "*ordinal hint*") {
