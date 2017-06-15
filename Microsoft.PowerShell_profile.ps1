@@ -2,6 +2,9 @@
 $transcriptFile = "$mydocs\WindowsPowerShell\transcripts\" + $(get-date -format "yyyyMMdd_HHmmssfff") + ".txt";
 Start-Transcript -Path $transcriptFile -NoClobber
 
+# Display size of transcripts folder
+$transcriptCount = (Get-ChildItem D:\Users\tmackenzie01\Documents\WindowsPowerShell\transcripts | Measure-Object -Property Length -sum); "Transcripts folder size: {0:N2}" -f ($transcriptCount.Sum / 1MB) + " MB"
+
 $major = $PSVersionTable.PSVersion.Major
 $minor = $PSVersionTable.PSVersion.Minor
 Write-Host "Loading profile for PowerShell $major.$minor" 
@@ -26,7 +29,6 @@ $tsqlMediaBackupsLocation = "C:\ProgramData\Titan\Media\Server\databases"
 $pcName = "$env:computername"
 $powershellIncludeDirectory = "${env:ProgramData}\WindowsPowerShell includes"
 
-
 # Dependencies
 Write-Host "Loading dependencies..."
 [System.Reflection.Assembly]::LoadWithPartialName("System.Web.Extensions") > $null
@@ -39,7 +41,6 @@ if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
   # For some reason I can't get this to work inside a sqlcmd call so have to
   # use messy alias variables like in Tsql-List-Databases
   if (([System.IO.File]::Exists("$powershellIncludeDirectory\DatabaseInfo.json"))) {
-    Write-Host "Loading data..."
     $dbInfoJson = Get-Content "$powershellIncludeDirectory\DatabaseInfo.json"
     $jsonSerializer = New-Object System.Web.Script.Serialization.JavaScriptSerializer
     $dbInfo = $jsonSerializer.DeserializeObject($dbInfoJson)
