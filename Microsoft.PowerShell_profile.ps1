@@ -727,12 +727,12 @@ function unzip ($zip, $dest) {
 function Get-DllEntryPoints($dllPath, [switch] $raw) {
   $output = ""
   $captureLine = $false;
-  $linkOutput = & vcLink /dump /imports $dllPath
+  $linkOutput = & vcLink /dump /exports $dllPath
 
   if ($raw) {
     $output = $linkOutput
   } else {
-    Get-Content D:\output.txt | ForEach {
+    $linkOutput | ForEach {
 	  if ($_ -like "*Summary*") {
         $captureLine = $false
       }
