@@ -19,6 +19,7 @@ Set-Alias ffmpeg "${env:ProgramFiles(x86)}\ffmpeg\bin\ffmpeg.exe"
 Set-Alias depends "${env:ProgramFiles(x86)}\Dependency Walker\Dependency Walker 2.2\depends.exe"
 Set-Alias ProcessExplorer "${env:ProgramFiles(x86)}\ProcessExplorer\procexp.exe"
 Set-Alias pe "${env:ProgramFiles(x86)}\ProcessExplorer\procexp.exe"
+Set-Alias vcLink "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe"
 
 # Global variables
 $tsqlCustomerBackupsLocation = "$mydocs\Customer DBs"
@@ -719,6 +720,36 @@ function unzip ($zip, $dest) {
   foreach($item in $zipNS.items()) {
     $shell.Namespace($dest).copyhere($item, $yesToAll)
   }
+}
+
+# This relies on entrypoint table with "ordinal hint" headings appearing followed by Summary
+# if this doesn't work then you can use the
+function Get-DllEntryPoints($dllPath, [switch] $raw) {
+  $output = ""
+  $captureLine = $false;
+  $linkOutput = & vcLink /dump /imports $dllPath
+
+  if ($raw) {
+    $output = $linkOutput
+  } else {
+    Get-Content D:\output.txt | ForEach {
+	  if ($_ -like "*Summary*") {
+        $captureLine = $false
+      }
+      if ($captureLine) {
+        if ($_.length -gt 0) {
+          # Trim after the equals
+          $trimmedLine = $_.Substring(0, $_.lastIndexOf('='))
+          $output = $output + $trimmedLine + "`n"
+        }
+      }
+      if ($_ -like "*ordinal hint*") {
+        $captureLine = $true
+      }
+    }
+  }
+
+  return $output
 }
 
 function sign ($filename) {
