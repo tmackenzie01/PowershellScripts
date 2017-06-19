@@ -20,6 +20,7 @@ Set-Alias depends "${env:ProgramFiles(x86)}\Dependency Walker\Dependency Walker 
 Set-Alias ProcessExplorer "${env:ProgramFiles(x86)}\ProcessExplorer\procexp.exe"
 Set-Alias pe "${env:ProgramFiles(x86)}\ProcessExplorer\procexp.exe"
 Set-Alias vcLink "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe"
+Set-Alias msbuild "C:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe"
 
 # Global variables
 $tsqlCustomerBackupsLocation = "$mydocs\Customer DBs"
@@ -724,7 +725,7 @@ function unzip ($zip, $dest) {
 
 # This relies on entrypoint table with "ordinal hint" headings appearing followed by Summary
 # if this doesn't work then you can use the
-function Get-DllEntryPoints($dllPath, [switch] $raw) {
+function Get-DllEntryPoints($dllPath, [switch]$raw) {
   $output = ""
   $captureLine = $false;
   $linkOutput = & vcLink /dump /exports $dllPath
@@ -747,6 +748,60 @@ function Get-DllEntryPoints($dllPath, [switch] $raw) {
         $captureLine = $true
       }
     }
+  }
+
+  return $output
+}
+
+function Build-Project([Parameter(Mandatory=$true)]$projectFolder, $sandbox) {
+  $output = ""
+  $sandbox = "D:\CodeSandbox\" # Default $sandbox
+
+  if ($projectFolder.indexOf("_") -lt 0 ) {
+    $projectFolderTrunk = $projectFolder + "_trunk"
+	Write-Host "`r`nProject folder changed to default trunk [$projectFolderTrunk]`r`n"
+	$projectFolder = $projectFolderTrunk
+  }
+
+  if (Test-Path $sandbox) {
+    $projectPath = $sandbox + $projectFolder
+    if (Test-Path $projectPath) {
+      $solutionDir = $projectPath + "\source\"
+      $ccPath = $solutionDir + "cc.proj"
+	  $nugetRestorePath = $solutionDir + "nugetRestore.proj"
+      if (Test-Path $ccPath) {
+        [xml]$cc = Get-Content $ccPath
+		# Just display the target names for now - we want to display the target name & the dependent targets
+		Write-Host "Select the project target to build"
+		for($i=0; $i -lt $cc.Project.Target.length; $i++) {
+		  $ccXmlPart = $cc.Project.Target[$i]
+          $index = $i + 1
+          $text = $index.toString() + " " + $ccXmlPart.Name
+		  if ($ccXmlPart.DependsOnTargets.length -gt 0) {
+            $text = $text + " [" + $ccXmlPart.DependsOnTargets + "]";
+          }
+          Write-Host $text
+        }
+
+        $targetSelection = Read-Host "Select target to build (1 - $i)"
+		$targetSelection = $targetSelection - 1
+		Write-Host "Selected target is $targetSelection"
+        $selectedTarget = $cc.Project.Target[$targetSelection].Name
+		Write-Host "Selected target is $selectedTarget"
+
+		# When a target is selected before we build that we must do a nuget restore
+		msbuild /Property:SolutionDir="$solutionDir" "$nugetRestorePath"
+
+		# then build the target
+		msbuild /Property:SolutionDir="$solutionDir" /t:$selectedTarget "$ccPath"
+      } else {
+        $output = $output + "msbuild file (cc.proj) not found - $ccPath"
+      }
+    } else {
+      $output = $output + "Project path not found - $projectPath"
+    }
+  } else {
+    $output = $output + "Sandbox does not exist - $sandbox"
   }
 
   return $output
