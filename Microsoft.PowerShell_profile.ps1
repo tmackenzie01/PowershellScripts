@@ -115,7 +115,8 @@ function Tsql {
 
 function Tsql-Show-Tables () {
   Param([String]$searchString,
-		[switch] $count)
+        [switch]$count,
+        [switch]$csv)
   $tables = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SELECT Table_name FROM Information_schema.Tables ORDER BY Table_name"
   $showTablesText = ""
   foreach ($table in $tables) {
@@ -140,6 +141,11 @@ function Tsql-Show-Tables () {
 	      $showTablesText = $showTablesText + "$tableName $tableCount`r`n"
 	  }
     }
+  }
+
+  if ($csv) {
+    $showTablesText = (($showTablesText ) -split ' ' | ForEach-Object { $_.Trim() }) | Where-Object { $_.length -gt 0 }
+
   }
   
   return $showTablesText
