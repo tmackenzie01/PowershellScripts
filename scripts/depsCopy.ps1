@@ -61,11 +61,15 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
 
 	  # Get times of source and release dlls
 	  $sourceDllLastWrite = (Get-ChildItem $sourceDll).LastWriteTime
-	  $releaseSourceDllLastWrite = (Get-ChildItem $releaseSourceDll).LastWriteTime
+	  if (Test-Path $releaseSourceDll) {
+        $releaseSourceDllLastWrite = (Get-ChildItem $releaseSourceDll).LastWriteTime
+      } else {
+        $releaseSourceDllLastWrite = $sourceDllLastWrite
+      }
 
 	  $dllFolder = $dest
 	  $copyText = "$sourceDll -> $dllFolder"
-	  if ($sourceDllLastWrite -le $releaseSourceDllLastWrite) {
+	  if ($sourceDllLastWrite -lt $releaseSourceDllLastWrite) {
         $errorOutput = $errorOutput + "$sourceDll`n"
         $releaseDllsNewer = $true
       } else {
