@@ -21,6 +21,7 @@ Set-Alias ProcessExplorer "${env:ProgramFiles(x86)}\ProcessExplorer\procexp.exe"
 Set-Alias pe "${env:ProgramFiles(x86)}\ProcessExplorer\procexp.exe"
 Set-Alias vcLink "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe"
 Set-Alias msbuild "C:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe"
+Set-Alias tsharkExe "C:\Program Files\Wireshark\tshark.exe"
 
 # Global variables
 $tsqlCustomerBackupsLocation = "$mydocs\Customer DBs"
@@ -811,6 +812,15 @@ function Build-Project([Parameter(Mandatory=$true)]$projectFolder, $sandbox) {
   }
 
   return $output
+}
+
+# Add -raw switch which copies all $args (minus the -raw switch and sticks it on end of tshark)
+# Then try
+# 	-$ip and stick it in tsharkExe -i "host $ip" -T fields -e ip.src -e tcp.srcport -e data
+function tshark {
+  # tshark -i "Local Area Connection 2" -f "host 192.168.150.71" -T fields -e ip.src -e tcp.srcport -e data
+  # -f host 172.16.2.222
+  & tsharkExe -i "Local Area Connection 2" $args
 }
 
 function sign ($filename) {
