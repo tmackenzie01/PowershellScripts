@@ -22,6 +22,7 @@ Set-Alias pe "${env:ProgramFiles(x86)}\ProcessExplorer\procexp.exe"
 Set-Alias vcLink "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe"
 Set-Alias msbuild "C:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe"
 Set-Alias tsharkExe "C:\Program Files\Wireshark\tshark.exe"
+Set-Alias tsqlTidyUp "$mydocs\..\source\repos\tsqltidyup\tsqltidyup\tsqltidyup\bin\debug\tsqltidyup.exe"
 
 # Global variables
 $tsqlCustomerBackupsLocation = "$mydocs\Customer DBs"
