@@ -3,7 +3,7 @@ $transcriptFile = "$mydocs\WindowsPowerShell\transcripts\" + $(get-date -format 
 Start-Transcript -Path $transcriptFile -NoClobber
 
 # Display size of transcripts folder
-$transcriptCount = (Get-ChildItem D:\Users\tmackenzie01\Documents\WindowsPowerShell\transcripts | Measure-Object -Property Length -sum); "Transcripts folder size: {0:N2}" -f ($transcriptCount.Sum / 1MB) + " MB"
+$transcriptCount = (Get-ChildItem $mydocs\WindowsPowerShell\transcripts | Measure-Object -Property Length -sum); "Transcripts folder size: {0:N2}" -f ($transcriptCount.Sum / 1MB) + " MB"
 
 $major = $PSVersionTable.PSVersion.Major
 $minor = $PSVersionTable.PSVersion.Minor
