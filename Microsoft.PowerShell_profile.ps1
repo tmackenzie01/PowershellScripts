@@ -49,6 +49,8 @@ if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
     $dbInfoJson = Get-Content "$powershellIncludeDirectory\DatabaseInfo.json"
     $jsonSerializer = New-Object System.Web.Script.Serialization.JavaScriptSerializer
     $dbInfo = $jsonSerializer.DeserializeObject($dbInfoJson)
+    $androidInfoJson = Get-Content "$powershellIncludeDirectory\AndroidInfo.json"
+    $androidInfo = $jsonSerializer.DeserializeObject($androidInfoJson)
   }
   else {
     Write-Host "Db info not found"
@@ -833,6 +835,35 @@ function Lsql ([Parameter(Mandatory=$true)] [String]$query, $databaseFileParam) 
   }
   
   sqlite $databaseFile $query
+}
+
+function adb-getDatabase($appName, [switch]$device) {  
+  # Default is to run the emulator, unless $device is set
+  $devEm = "-e"
+  if ($device) {
+    $devEm = "-d" 
+  }
+  
+  if ([string]::IsNullOrEmpty($appName)) {
+    $androidAppName = $androidInfo.AndroidApp
+  } else {
+    $androidAppName = $appName
+  }
+  
+  $databasesPath = "/data/data/$androidAppName/databases"
+  $databaseName = $androidInfo.AndroidAppDatabaseName
+  $databaseResults = adb $devEm shell run-as "$androidAppName" ls $databasesPath
+  $databaseResultsSplit = $databaseResults.split(" ")
+  if ($databaseResultsSplit[0] -eq $databaseName) {
+    $sourceatabasePath = "$databasesPath/$databaseName"
+    $destDatabasePath = "/sdcard/$databaseName"
+	Write-Host "Copying database to sd card"
+    adb $devEm shell run-as "$androidAppName" cp $sourceatabasePath $destDatabasePath 
+	Write-Host "Copying from emulator/device"
+    adb $devEm pull $destDatabasePath
+	Write-Host "Database copied"
+  }
+  ls $databaseName
 }
 
 function sign ($filename) {
