@@ -455,7 +455,7 @@ function Tsql-List-Databases([switch] $verbose, [switch] $quick) {
 	  $summaryText5 = "$auCount $dbAuNamePlural"
 	
 	  if ($verbose) {
-	    $verboseText1Heading = "$spCount $dbSpNamePlural:"
+	    $verboseText1Heading = "$spCount $dbSpNamePlural :"
 	    $verboseText1Result = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON; $listDatabasesSpecialQuery1" -W -h -1
 	    $verboseText1 = $verboseText1Heading + $verboseText1Result
 	  }
