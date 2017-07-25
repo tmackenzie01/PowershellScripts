@@ -17,7 +17,7 @@ depsCopy_args.json (describes which projects to copy dlls from and to)
 http://github.com/tmackenzie01/PowershellScripts
 #>
 
-Param([switch] $revert, $set)
+Param([switch] $revert, $set, [switch]$setlist)
 
 [System.Reflection.Assembly]::LoadWithPartialName("System.Web.Extensions") > $null
 
@@ -153,6 +153,27 @@ $sourceRepos = "TitanVision_trunk", "AdminTool_trunk"
 $destRepos = ""
 $sandboxPath = ""
 
+  # Load args
+if (([System.IO.File]::Exists("$powershellIncludeDirectory\depsCopy_args.json"))) {
+  $jsonFile = Get-Content "$powershellIncludeDirectory\depsCopy_args.json"
+  $jsonSerializer = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+  $jsonArgs = $jsonSerializer.DeserializeObject($jsonFile)
+}
+else {
+  Write-Host "Args file doesn't exist $powershellIncludeDirectory\depsCopy_args.json"
+  exit
+}
+
+if ($setlist) {
+  Write-Host "Listing sets available"
+  for ($i=0; $i -lt $jsonArgs.length; $i++) {
+    $sandboxPath = $jsonArgs[$i].sandboxPath
+    Write-Host "$i $sandboxPath"
+  }
+  
+  $set = Read-Host "Enter a single number for the set you wish to use"
+}
+
 if ([string]::IsNullOrEmpty($set)) {
   $set = 0;
 }
@@ -160,19 +181,9 @@ if ([string]::IsNullOrEmpty($set)) {
 Write-Host "Using set $set"
 
 if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
-  # Load args
-  if (([System.IO.File]::Exists("$powershellIncludeDirectory\depsCopy_args.json"))) {
-    $jsonFile = Get-Content "$powershellIncludeDirectory\depsCopy_args.json"
-    $jsonSerializer = New-Object System.Web.Script.Serialization.JavaScriptSerializer
-    $jsonArgs = $jsonSerializer.DeserializeObject($jsonFile)
-	$sourceRepos = $jsonArgs[$set].sourceRepos
-	$destRepos = $jsonArgs[$set].destRepos
-	$sandboxPath = $jsonArgs[$set].sandboxPath
-  }
-  else {
-    Write-Host "Args file doesn't exist $powershellIncludeDirectory\depsCopy_args.json"
-	exit
-  }
+  $sourceRepos = $jsonArgs[$set].sourceRepos
+  $destRepos = $jsonArgs[$set].destRepos
+  $sandboxPath = $jsonArgs[$set].sandboxPath
 }
 
 if ($revert) {
