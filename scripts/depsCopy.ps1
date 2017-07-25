@@ -168,7 +168,8 @@ if ($setlist) {
   Write-Host "Listing sets available"
   for ($i=0; $i -lt $jsonArgs.length; $i++) {
     $sandboxPath = $jsonArgs[$i].sandboxPath
-    Write-Host "$i $sandboxPath"
+    $comment = $jsonArgs[$i]._comment
+    Write-Host "$i $comment ($sandboxPath)"
   }
   
   $set = Read-Host "Enter a single number for the set you wish to use"
