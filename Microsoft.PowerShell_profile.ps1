@@ -821,10 +821,15 @@ function Build-Project([Parameter(Mandatory=$true)]$projectFolder, $sandbox) {
 # Add -raw switch which copies all $args (minus the -raw switch and sticks it on end of tshark)
 # Then try
 # 	-$ip and stick it in tsharkExe -i "host $ip" -T fields -e ip.src -e tcp.srcport -e data
-function tshark {
-  # tshark -i "Local Area Connection 2" -f "host 192.168.150.71" -T fields -e ip.src -e tcp.srcport -e data
-  # -f host 172.16.2.222
-  & tsharkExe -i "Local Area Connection 2" $args
+function tshark($ip) {
+  $localAreaConnection = "Local Area Connection 2"
+  if (![string]::IsNullOrEmpty($ip)) {
+    # tshark -i "Local Area Connection 2" -f "host 192.168.150.71" -T fields -e ip.src -e tcp.srcport -e data
+    & tsharkExe -i "$localAreaConnection" -f "host $ip" -T fields -e ip.src -e tcp.srcport -e data
+	return
+  }
+
+  & tsharkExe -i "$localAreaConnection" $args
 }
 
 function Lsql ([Parameter(Mandatory=$true)] [String]$query, $databaseFileParam) {  
