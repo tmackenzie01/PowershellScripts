@@ -34,7 +34,7 @@ Param($versionToInstall, [switch]$uninstallVersions, [switch]$gallery7, [switch]
 #   Listing of 7 versions in Gallery
 
 # Load data
-Write-Host "Loading data..."
+"Loading data..."
 if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
   # Load local info
   # To access properties of $ localInfo when inside a string use "$($localInfo.DatabaseName)"
@@ -213,8 +213,13 @@ if ((!$PSBoundParameters.ContainsKey('versionToInstall')) -and (!$PSBoundParamet
     $fileCount = $fileCount + 1
   }
   
-  $selection = Read-Host "Enter a single number for the version you wish to install"
-  $versionToInstall = $versionsAvail[$selection-1].Major.toString() + "." + $versionsAvail[$selection-1].Minor.toString() + "." + $versionsAvail[$selection-1].Revision.toString()
+  if ($fileCount -eq 1) {
+    "No versions found"
+	return
+  } else {  
+    $selection = Read-Host "Enter a single number for the version you wish to install"
+    $versionToInstall = $versionsAvail[$selection-1].Major.toString() + "." + $versionsAvail[$selection-1].Minor.toString() + "." + $versionsAvail[$selection-1].Revision.toString()
+  }
 }
 
 if (($testGallery) -or ($testGallery7)) {
