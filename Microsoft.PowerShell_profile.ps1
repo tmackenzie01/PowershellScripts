@@ -52,6 +52,8 @@ if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
     $dbInfo = $jsonSerializer.DeserializeObject($dbInfoJson)
     $androidInfoJson = Get-Content "$powershellIncludeDirectory\AndroidInfo.json"
     $androidInfo = $jsonSerializer.DeserializeObject($androidInfoJson)
+    $localInfoJson = Get-Content "$powershellIncludeDirectory\LocalInfo.json"
+    $localInfo = $jsonSerializer.DeserializeObject($localInfoJson)
   }
   else {
     Write-Host "Db info not found"
@@ -870,6 +872,18 @@ function adb-getDatabase($appName, [switch]$device) {
 	Write-Host "Database copied"
   }
   ls $databaseName
+}
+
+function Refresh-RedmineRepos() {
+  $rm = $localInfo.Redmine
+  $projects = $localInfo.RedmineProjects
+
+  Write-Host "Refreshing..."
+  foreach ($proj in $projects) {
+    Write-Host $proj
+    curl("$rm/projects/$proj/repository") > $null
+  }
+  Write-Host "Complete"
 }
 
 function curl($url) {
