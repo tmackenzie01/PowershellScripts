@@ -872,6 +872,15 @@ function adb-getDatabase($appName, [switch]$device) {
   ls $databaseName
 }
 
+function curl($url) {
+  $r = [System.Net.WebRequest]::Create("http://$url/")
+  $resp = $r.GetResponse()
+  $reqstream = $resp.GetResponseStream()
+  $sr = new-object System.IO.StreamReader $reqstream
+  $result = $sr.ReadToEnd()
+  return $result
+}
+
 function sign ($filename) {
   $cert = @(gci cert:\currentuser\My -codesign)[0]
   Set-AuthenticodeSignature $filename $cert
