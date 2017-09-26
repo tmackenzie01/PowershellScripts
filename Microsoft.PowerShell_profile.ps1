@@ -26,6 +26,7 @@ Set-Alias vstest "C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\ID
 Set-Alias tsharkExe "C:\Program Files\Wireshark\tshark.exe"
 Set-Alias tsqlTidyUp "$mydocs\..\source\repos\tsqltidyup\tsqltidyup\tsqltidyup\bin\debug\tsqltidyup.exe"
 Set-Alias sqlite "C:\Program Files (x86)\SQLiteTools\sqlite3.exe"
+Set-Alias iscc "C:\Program Files (x86)\Inno Setup 5\iscc.exe"
 
 # Global variables
 $tsqlCustomerBackupsLocation = "$mydocs\Customer DBs"
