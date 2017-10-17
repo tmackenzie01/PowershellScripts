@@ -131,7 +131,6 @@ if ($uninstallVersions) {
     & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM\unins000.exe"
   }
   $programTVM7 = $programTVM + "7"
-  Write-Host "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM7\unins000.exe"
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM7\unins000.exe") {
     Write-Host "Uninstall $programTVM7"
     & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM7\unins000.exe"
@@ -292,7 +291,6 @@ if (($testGallery) -or ($testGallery7)) {
   $programWithPlatfomTVSExe = $programTVSExe
   $programWithPlatfomTVCExe = $programTVCExe
   $programWithPlatfomTVMExe = $programTVMExe
-  Write-Host "($programWithPlatfomTVAExe)"
   
   # Work up from 0 to n where n is the revision in the version - not all will be at that version
   for($i=0; $i -le ($versionObject.Revision); $i++) {
