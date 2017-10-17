@@ -26,7 +26,7 @@ Allows specification of flavour, can be in quotes with spaces, or no quotes and 
 http://github.com/tmackenzie01/PowershellScripts
 #>
 
-Param($versionToInstall, [switch]$uninstallVersions, [switch]$gallery7, [switch]$testGallery, [switch]$testGallery7, $flavour)
+Param($versionToInstall, [switch]$uninstallVersions, [switch]$gallery7, [switch]$testGallery, [switch]$testGallery7, $flavour, $platform)
 
 # Functionality to add
 #   Flavour selection
@@ -77,6 +77,14 @@ $installA = $false
 $installS = $false
 $installC = $false
 $installM = $false
+
+$selectedPlatform = "x86"
+if ($PSBoundParameters.ContainsKey('platform')) {
+  $selectedPlatform = "$platform"
+}
+
+$galleryDir = $galleryDir + "\$selectedPlatform"
+$testGalleryDir = $testGalleryDir + "\$selectedPlatform"
 
 $flavourIndex = 0
 $matchFound = $false
@@ -226,6 +234,12 @@ if (($testGallery) -or ($testGallery7)) {
   $galleryDir = $testGalleryDir
   $parentVersion = ""
   
+  # We are always getting just the latest testtag from the TestGallery so it will always have x86/x64 exe format
+  $programWithPlatfomTVAExe = $programTVAExe.Replace(".exe", "_$selectedPlatform.exe")
+  $programWithPlatfomTVSExe = $programTVSExe.Replace(".exe", "_$selectedPlatform.exe")
+  $programWithPlatfomTVCExe = $programTVCExe.Replace(".exe", "_$selectedPlatform.exe")
+  $programWithPlatfomTVMExe = $programTVMExe.Replace(".exe", "_$selectedPlatform.exe")
+
   if ($testGallery) {
     $versionA = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionA = $versionA.Name
@@ -269,41 +283,92 @@ if (($testGallery) -or ($testGallery7)) {
     $programTVAExe = $programTVAOldExe
   }
 
+  $programAFound = $false
+  $programSFound = $false
+  $programCFound = $false
+  $programMFound = $false
+
+  $programWithPlatfomTVAExe = $programTVAExe
+  $programWithPlatfomTVSExe = $programTVSExe
+  $programWithPlatfomTVCExe = $programTVCExe
+  $programWithPlatfomTVMExe = $programTVMExe
+  Write-Host "($programWithPlatfomTVAExe)"
+  
   # Work up from 0 to n where n is the revision in the version - not all will be at that version
   for($i=0; $i -le ($versionObject.Revision); $i++) {
     $versionText = $versionObject.Major + "." + $versionObject.Minor + "." + $i
-    if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA\$versionText") {
+    if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA\$platform\$versionText") {
       $versionA = $versionText
-      if (!(Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA\$versionText\$programTVAExe")) {
-	    Write-Host "$programTVAExe not found for $versionA"; return
-	  }
-    }  
-    if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$versionText") {
-      $versionS = $versionText
-      if (!(Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$versionText\$programTVSExe")) {
-	    Write-Host "$programTVSExe not found for $versionS"; return
-  	  }
-    }
-    if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$versionText") {
-      $versionC = $versionText
-      if (!(Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$versionText\$programTVCExe")) {
-	    Write-Host "$programTVCExe not found for $versionC"; return
-	  }
-    }
-    if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionText") {
-      $versionM = $versionText
-      if (!(Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionText\$programTVMExe")) {
-	    Write-Host "$programTVMExe not found for $versionM"; return
+	  # Check if the exe is platform agnostic or platform specific
+      if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA\$versionText\$platform\$programWithPlatfomTVAExe") {
+	    $programAFound = $true
+	  } else {
+	    $programWithPlatfomTVAExe = $programTVAExe.Replace(".exe", "_$selectedPlatform.exe")
+        if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA\$versionText\$platform\$programWithPlatfomTVAExe") {
+	      $programAFound = $true
+	    }
       }
     }
+    if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$platform\$versionText") {
+      $versionS = $versionText
+	  # Check if the exe is platform agnostic or platform specific
+      if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$versionText\$platform\$programWithPlatfomTVSExe") {
+	    $programSFound = $true
+	  } else {
+	    $programWithPlatfomTVSExe = $programTVSExe.Replace(".exe", "_$selectedPlatform.exe")
+        if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$versionText\$platform\$programWithPlatfomTVSExe") {
+	      $programSFound = $true
+	    }
+      }
+    }
+    if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$platform\$versionText") {
+      $versionC = $versionText
+	  # Check if the exe is platform agnostic or platform specific
+      if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$versionText\$platform\$programWithPlatfomTVCExe") {
+	    $programCFound = $true
+	  } else {
+	    $programWithPlatfomTVAExe = $programTVCExe.Replace(".exe", "_$selectedPlatform.exe")
+        if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$versionText\$platform\$programWithPlatfomTVCExe") {
+	      $programCFound = $true
+	    }
+      }
+    }
+    if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$platform\$versionText") {
+      $versionM = $versionText
+	  # Check if the exe is platform agnostic or platform specific
+      if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionText\$platform\$programWithPlatfomTVMExe") {
+	    $programMFound = $true
+	  } else {
+	    $programWithPlatfomTVAExe = $programTVMExe.Replace(".exe", "_$selectedPlatform.exe")
+        if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionText\$platform\$programWithPlatfomTVMExe") {
+	      $programMFound = $true
+	    }
+      }
+    }
+  }
+
+  if ((!$programAFound) -or (!$programSFound) -or (!$programCFound) -or (!$programMFound)) {
+    if (!$programAFound) {
+      Write-Host "$programTVAExe not found for $versionA";
+    }
+    if (!$programSFound) {
+      Write-Host "$programTVSExe not found for $versionS"
+    }
+    if (!$programCFound) {
+      Write-Host "$programTVCExe not found for $versionC"
+    }
+    if (!$programMFound) {
+      Write-Host "$programTVMExe not found for $versionM"
+    }
+	return
   }
 }
 
 Write-Host "Version detection is as follows: `n"
-Write-Host "$programTVA $versionA" 
-Write-Host "$programTVS $versionS" 
-Write-Host "$programTVC $versionC" 
-Write-Host "$programTVM $versionM"
+Write-Host "$programTVA $versionA ($selectedPlatform)"
+Write-Host "$programTVS $versionS ($selectedPlatform)"
+Write-Host "$programTVC $versionC ($selectedPlatform)"
+Write-Host "$programTVM $versionM ($selectedPlatform)"
 
 $confirmation = Read-Host "Do you want to install these versions? (y/n) Or a selection (s)"
 if ($confirmation -Match 'n') {
@@ -331,21 +396,21 @@ if ($confirmation -Match 'n') {
 
 if ($installA -eq $true) {
   Write-Host "Installing $selectedFlavour $programTVA $versionA"
-  & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA\$versionA\$programTVAExe" /silent /suppressmsgboxes | Out-Null
+  & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA\$versionA\$programWithPlatfomTVAExe" /silent /suppressmsgboxes | Out-Null
   if ($LastExitCode -ne 0) { Write-Host "Error"; return}
 }
 if ($installS -eq $true) {
   Write-Host "Installing $selectedFlavour $programTVS $versionS"
-  & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$versionS\$programTVSExe" /silent /suppressmsgboxes | Out-Null
+  & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$versionS\$programWithPlatfomTVSExe" /silent /suppressmsgboxes | Out-Null
   if ($LastExitCode -ne 0) { Write-Host "Error"; return}
 }
 if ($installC -eq $true) {
   Write-Host "Installing $selectedFlavour $programTVC $versionC"
-  & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$versionC\$programTVCExe" /silent /suppressmsgboxes | Out-Null
+  & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$versionC\$programWithPlatfomTVCExe" /silent /suppressmsgboxes | Out-Null
   if ($LastExitCode -ne 0) { Write-Host "Error"; return}
 }
   if ($installM -eq $true) {
-  Write-Host "Installing $selectedFlavour $programTVM $versionM" 
-  & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionM\$programTVMExe" /silent /suppressmsgboxes | Out-Null
+  Write-Host "Installing $selectedFlavour $programTVM $versionM"
+  & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionM\$programWithPlatfomTVMExe" /silent /suppressmsgboxes | Out-Null
   if ($LastExitCode -ne 0) { Write-Host "Error"; return}
 }
