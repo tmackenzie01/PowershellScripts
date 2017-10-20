@@ -51,22 +51,33 @@ if (([System.IO.Directory]::Exists("$powershellIncludeDirectory"))) {
 $galleryDir = $($localInfo.GalleryDir)
 $testGalleryDir = $($localInfo.TestGalleryDir)
 $programTV = $($localInfo.ProgramTV)
+$programR = $($localInfo.ProgramR)
+$programRFS = $($localInfo.ProgramRFS)
 # Could put all these into arrays for A,S,C,M - but don't want to overcompliate things at the moment - maybe later
 $programTVA = $($localInfo.ProgramTVA)
 $programTVS = $($localInfo.ProgramTVS)
 $programTVC = $($localInfo.ProgramTVC)
 $programTVM = $($localInfo.ProgramTVM)
+$programR = $($localInfo.ProgramR)
+$programRFS = $($localInfo.ProgramRFS)
+
 $programTVAExe = $($localInfo.ProgramTVAExe)
 $programTVAOLdExe = $($localInfo.ProgramTVAOldExe)
 $programTVSExe = $($localInfo.ProgramTVSExe)
 $programTVCExe = $($localInfo.ProgramTVCExe)
 $programTVMExe = $($localInfo.ProgramTVMExe)
+$programRExe = $($localInfo.ProgramRExe)
+$programRFSExe = $($localInfo.ProgramRFSExe)
+
+$programRInstallExe = $($localInfo.ProgramRInstallExe)
 
 $programFilesParentFolder = $($localInfo.ProgramFilesParentFolder)
 $programFilesFolderA = $($localInfo.ProgramFilesFolderA)
 $programFilesFolderS = $($localInfo.ProgramFilesFolderS)
 $programFilesFolderC = $($localInfo.ProgramFilesFolderC)
 $programFilesFolderM = $($localInfo.ProgramFilesFolderM)
+$programFilesFolderR = $($localInfo.ProgramFilesFolderR)
+$programFilesFolderRFS = $($localInfo.ProgramFilesFolderRFS)
 $programFilesFolderC7 = $($localInfo.ProgramFilesFolderC7)
 $programFilesFolderM7 = $($localInfo.ProgramFilesFolderM7)
 
@@ -77,6 +88,8 @@ $installA = $false
 $installS = $false
 $installC = $false
 $installM = $false
+$installR = $false
+$installRFS = $false
 
 $selectedPlatform = "x86"
 if ($PSBoundParameters.ContainsKey('platform')) {
@@ -107,35 +120,94 @@ if ($PSBoundParameters.ContainsKey('flavour')) {
 
 $selectedFlavour = $flavours[$flavourIndex]
 $selectedFlavourFolderName = $flavourFolderNames[$flavourIndex] + "\"
+$releaseFolderName = "Release\" # for RFS
 
 if ($uninstallVersions) {
+  # Admin x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderA\unins000.exe") {
-    Write-Host "Uninstall $programTVA"
+    Write-Host "Uninstall $programTVA (x86)"
     & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderA\unins000.exe"
   }
+  # Admin x64
+  if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderA\unins000.exe") {
+    Write-Host "Uninstall $programTVA (x64)"
+    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderA\unins000.exe"
+  }
+  # Server x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderS\unins000.exe") {
     Write-Host "Uninstall $programTVS"
     & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderS\unins000.exe"
   }
+  # Server x64
+  if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderS\unins000.exe") {
+    Write-Host "Uninstall $programTVS (x64)"
+    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderS\unins000.exe"
+  }
+  # Client x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderC\unins000.exe") {
-    Write-Host "Uninstall $programTVC"
+    Write-Host "Uninstall $programTVC (x86)"
     & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderC\unins000.exe"
   }
+  # Client x64
+  if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderC\unins000.exe") {
+    Write-Host "Uninstall $programTVC (x64)"
+    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderC\unins000.exe"
+  }
   $programTVC7 = $programTVC + "7"
+  # Client7 x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderC7\unins000.exe") {
-    Write-Host "Uninstall $programTVC7"
+    Write-Host "Uninstall $programTVC7 (x86)"
     & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderC7\unins000.exe"
   }
+  # Client7 x64
+  if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderC7\unins000.exe") {
+    Write-Host "Uninstall $programTVC7 (x64)"
+    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderC7\unins000.exe"
+  }
+  # Multiplexer x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM\unins000.exe") {
-    Write-Host "Uninstall $programTVM"
+    Write-Host "Uninstall $programTVM (x86)"
+    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM\unins000.exe"
+  }
+  # Multiplexer x64
+  if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderM\unins000.exe") {
+    Write-Host "Uninstall $programTVM (x64)"
     & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM\unins000.exe"
   }
   $programTVM7 = $programTVM + "7"
+  # Multiplexer7 x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM7\unins000.exe") {
-    Write-Host "Uninstall $programTVM7"
+    Write-Host "Uninstall $programTVM7 (x86)"
     & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM7\unins000.exe"
   }
-  
+  # Multiplexer7 x64
+  if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderM7\unins000.exe") {
+    Write-Host "Uninstall $programTVM7 (x64)"
+    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderM7\unins000.exe"
+  }
+
+  # Recorder x86
+  if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderR\unins000.exe") {
+    Write-Host "Uninstall $programR (x86)"
+    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderR\unins000.exe"
+  }
+  # Recorder x64
+  if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderR\unins000.exe") {
+    Write-Host "Uninstall $programR (x64)"
+    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderR\unins000.exe"
+  }
+
+  # RFS x86
+  if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderRFS\unins000.exe") {
+    Write-Host "Uninstall $programRFS (x86)"
+    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderRFS\unins000.exe"
+  }
+  # RFS x64
+  if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderRFS\unins000.exe") {
+    Write-Host "Uninstall $programRFS (x64)"
+    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderRFS\unins000.exe"
+  }
+
   Write-Host "Uninstall complete"
   return
 }
@@ -238,6 +310,8 @@ if (($testGallery) -or ($testGallery7)) {
   $programWithPlatfomTVSExe = $programTVSExe.Replace(".exe", "_$selectedPlatform.exe")
   $programWithPlatfomTVCExe = $programTVCExe.Replace(".exe", "_$selectedPlatform.exe")
   $programWithPlatfomTVMExe = $programTVMExe.Replace(".exe", "_$selectedPlatform.exe")
+  $programWithPlatfomRExe = $programRInstallExe.Replace(".exe", "_$selectedPlatform.exe")
+  $programWithPlatfomRFSExe = $programRFSExe.Replace(".exe", "_$selectedPlatform.exe")
 
   if ($testGallery) {
     $versionA = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
@@ -248,6 +322,10 @@ if (($testGallery) -or ($testGallery7)) {
     $versionC = $versionC.Name
     $versionM = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionM = $versionM.Name
+    $versionR = Get-ChildItem "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
+    $versionR = $versionR.Name
+    $versionRFS = Get-ChildItem "$galleryDir\$programRFS\$parentVersion$releaseFolderName" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
+    $versionRFS = $versionRFS.Name
   } else {
     $programTVC = "$programTVC" + "7"
     $programTVM = "$programTVM" + "7"
@@ -286,11 +364,15 @@ if (($testGallery) -or ($testGallery7)) {
   $programSFound = $false
   $programCFound = $false
   $programMFound = $false
+  $programRFound = $false
+  $programRFSFound = $false
 
   $programWithPlatfomTVAExe = $programTVAExe
   $programWithPlatfomTVSExe = $programTVSExe
   $programWithPlatfomTVCExe = $programTVCExe
   $programWithPlatfomTVMExe = $programTVMExe
+  $programWithPlatfomRExe = $ProgramRInstallExe
+  $programWithPlatfomRFSExe = $programRFSExe
   
   # Work up from 0 to n where n is the revision in the version - not all will be at that version
   for($i=0; $i -le ($versionObject.Revision); $i++) {
@@ -367,6 +449,10 @@ Write-Host "$programTVA $versionA ($selectedPlatform)"
 Write-Host "$programTVS $versionS ($selectedPlatform)"
 Write-Host "$programTVC $versionC ($selectedPlatform)"
 Write-Host "$programTVM $versionM ($selectedPlatform)"
+if ($testGallery) {
+  Write-Host "$programR $versionR ($selectedPlatform)"
+  Write-Host "$programRFS $versionRFS ($selectedPlatform)"
+}
 
 $confirmation = Read-Host "Do you want to install these versions? (y/n) Or a selection (s)"
 if ($confirmation -Match 'n') {
@@ -377,12 +463,20 @@ if ($confirmation -Match 'n') {
 	Write-Host "2   Server"
 	Write-Host "3   Client"
 	Write-Host "4   Multiplexer"
+	if ($testGallery) {
+	  Write-Host "5   Recorder"
+	  Write-Host "6   RFS"
+	}
     $selection = Read-Host "Enter a single number or CSV list of numbers for the programs you wish to install"
 	foreach($singleSelection in $selection.split(",")) {
 	  if ($singleSelection.trim() -eq 1) { $installA = $true }
 	  if ($singleSelection.trim() -eq 2) { $installS = $true }
 	  if ($singleSelection.trim() -eq 3) { $installC = $true }
 	  if ($singleSelection.trim() -eq 4) { $installM = $true }
+	  if ($testGallery) {
+	    if ($singleSelection.trim() -eq 5) { $installR = $true }
+	    if ($singleSelection.trim() -eq 6) { $installRFS = $true }
+	  }
 	}
   } else {
     $installA = $true
@@ -407,8 +501,20 @@ if ($installC -eq $true) {
   & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$versionC\$programWithPlatfomTVCExe" /silent /suppressmsgboxes | Out-Null
   if ($LastExitCode -ne 0) { Write-Host "Error"; return}
 }
-  if ($installM -eq $true) {
+if ($installM -eq $true) {
   Write-Host "Installing $selectedFlavour $programTVM $versionM"
   & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionM\$programWithPlatfomTVMExe" /silent /suppressmsgboxes | Out-Null
   if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+}
+if ($testGallery) {
+  if ($installR -eq $true) {
+    Write-Host "Installing $selectedFlavour $programR $versionR"
+    & "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName\$versionR\$programWithPlatfomRExe" /silent /suppressmsgboxes | Out-Null
+    if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+  }
+  if ($installRFS -eq $true) {
+    Write-Host "Installing Release $programRFS $versionRFS"
+    & "$galleryDir\$programRFS\$releaseFolderName\$versionRFS\$programWithPlatfomRFSExe" /silent /suppressmsgboxes | Out-Null
+    if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+  }
 }
