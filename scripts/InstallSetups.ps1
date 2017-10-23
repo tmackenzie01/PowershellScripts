@@ -407,7 +407,7 @@ if (($testGallery) -or ($testGallery7)) {
       if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$versionText\$platform\$programWithPlatfomTVCExe") {
 	    $programCFound = $true
 	  } else {
-	    $programWithPlatfomTVAExe = $programTVCExe.Replace(".exe", "_$selectedPlatform.exe")
+	    $programWithPlatfomTVCExe = $programTVCExe.Replace(".exe", "_$selectedPlatform.exe")
         if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$versionText\$platform\$programWithPlatfomTVCExe") {
 	      $programCFound = $true
 	    }
@@ -419,7 +419,7 @@ if (($testGallery) -or ($testGallery7)) {
       if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionText\$platform\$programWithPlatfomTVMExe") {
 	    $programMFound = $true
 	  } else {
-	    $programWithPlatfomTVAExe = $programTVMExe.Replace(".exe", "_$selectedPlatform.exe")
+	    $programWithPlatfomTVMExe = $programTVMExe.Replace(".exe", "_$selectedPlatform.exe")
         if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionText\$platform\$programWithPlatfomTVMExe") {
 	      $programMFound = $true
 	    }
