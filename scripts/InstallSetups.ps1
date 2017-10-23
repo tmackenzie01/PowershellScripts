@@ -324,8 +324,12 @@ if (($testGallery) -or ($testGallery7)) {
     $versionM = $versionM.Name
     $versionR = Get-ChildItem "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionR = $versionR.Name
-    $versionRFS = Get-ChildItem "$galleryDir\$programRFS\$parentVersion$releaseFolderName" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
-    $versionRFS = $versionRFS.Name
+	if ($platform -eq "x86") {
+      $versionRFS = Get-ChildItem "$galleryDir\$programRFS\$parentVersion$releaseFolderName" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
+      $versionRFS = $versionRFS.Name
+	} else {
+	  $versionRFS = "x64 not supported"
+	}
   } else {
     $programTVC = "$programTVC" + "7"
     $programTVM = "$programTVM" + "7"
@@ -451,7 +455,11 @@ Write-Host "$programTVC $versionC ($selectedPlatform)"
 Write-Host "$programTVM $versionM ($selectedPlatform)"
 if ($testGallery) {
   Write-Host "$programR $versionR ($selectedPlatform)"
-  Write-Host "$programRFS $versionRFS ($selectedPlatform)"
+  if ($platform -eq "x86") {
+    Write-Host "$programRFS $versionRFS ($selectedPlatform only)"
+  } else {
+    Write-Host "$programRFS $versionRFS"
+  }
 }
 
 $confirmation = Read-Host "Do you want to install these versions? (y/n) Or a selection (s)"
@@ -465,7 +473,9 @@ if ($confirmation -Match 'n') {
 	Write-Host "4   Multiplexer"
 	if ($testGallery) {
 	  Write-Host "5   Recorder"
-	  Write-Host "6   RFS"
+	  if ($platform -eq "x86") {
+	    Write-Host "6   RFS"
+	  }
 	}
     $selection = Read-Host "Enter a single number or CSV list of numbers for the programs you wish to install"
 	foreach($singleSelection in $selection.split(",")) {
@@ -475,7 +485,9 @@ if ($confirmation -Match 'n') {
 	  if ($singleSelection.trim() -eq 4) { $installM = $true }
 	  if ($testGallery) {
 	    if ($singleSelection.trim() -eq 5) { $installR = $true }
-	    if ($singleSelection.trim() -eq 6) { $installRFS = $true }
+	    if ($platform -eq "x86") {
+	      if ($singleSelection.trim() -eq 6) { $installRFS = $true }
+		}
 	  }
 	}
   } else {
