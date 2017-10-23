@@ -324,7 +324,7 @@ if (($testGallery) -or ($testGallery7)) {
     $versionM = $versionM.Name
     $versionR = Get-ChildItem "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionR = $versionR.Name
-	if ($platform -eq "x86") {
+	if ($selectedPlatform -eq "x86") {
       $versionRFS = Get-ChildItem "$galleryDir\$programRFS\$parentVersion$releaseFolderName" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
       $versionRFS = $versionRFS.Name
 	} else {
@@ -455,7 +455,7 @@ Write-Host "$programTVC $versionC ($selectedPlatform)"
 Write-Host "$programTVM $versionM ($selectedPlatform)"
 if ($testGallery) {
   Write-Host "$programR $versionR ($selectedPlatform)"
-  if ($platform -eq "x86") {
+  if ($selectedPlatform -eq "x86") {
     Write-Host "$programRFS $versionRFS ($selectedPlatform only)"
   } else {
     Write-Host "$programRFS $versionRFS"
@@ -473,7 +473,7 @@ if ($confirmation -Match 'n') {
 	Write-Host "4   Multiplexer"
 	if ($testGallery) {
 	  Write-Host "5   Recorder"
-	  if ($platform -eq "x86") {
+	  if ($selectedPlatform -eq "x86") {
 	    Write-Host "6   RFS"
 	  }
 	}
@@ -485,7 +485,7 @@ if ($confirmation -Match 'n') {
 	  if ($singleSelection.trim() -eq 4) { $installM = $true }
 	  if ($testGallery) {
 	    if ($singleSelection.trim() -eq 5) { $installR = $true }
-	    if ($platform -eq "x86") {
+	    if ($selectedPlatform -eq "x86") {
 	      if ($singleSelection.trim() -eq 6) { $installRFS = $true }
 		}
 	  }
