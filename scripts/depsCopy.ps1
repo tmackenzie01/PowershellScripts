@@ -50,41 +50,56 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
   $output = ""
   $errorOutput = ""
   $releaseDllsNewer = $false
+  $platforms = "", "x86", "x64"
 
-  foreach ($dll in $obj.$project) {
-    if ($dll.dll) {
-      $dllFile = $dll.dll
-      $dllPath = $dll.path
-	  $dllPath = "$fullSource\source\$dllPath"
-	  $sourceDll = "$dllPath\$dllFile"
-	  $releaseSourceDll = $sourceDll -replace "\\Debug\\", "\Release\"
+  foreach ($platform in $platforms) {
+    foreach ($dll in $obj.$project) {
+      if ($dll.dll) {
+        $dllFile = $dll.dll
+        $dllPath = $dll.path
+  	    $dllPath = "$fullSource\source\$dllPath"
+	    $sourceDll = "$dllPath\$dllFile"
+	    # Add platform path to Debug path
+	    $sourceDll = $sourceDll -replace "\\Debug\\", "\$platform\Release\"
+	    # Add platform path when creating Release path
+	    $releaseSourceDll = $sourceDll -replace "\\Debug\\", "\$platform\Release\"
 
-	  # Get times of source and release dlls
-	  $sourceDllLastWrite = (Get-ChildItem $sourceDll).LastWriteTime
-	  if (Test-Path $releaseSourceDll) {
-        $releaseSourceDllLastWrite = (Get-ChildItem $releaseSourceDll).LastWriteTime
-      } else {
-        $releaseSourceDllLastWrite = $sourceDllLastWrite
+	    # Get times of source and release dlls
+	    if (Test-Path $releaseSourceDll) {
+  	      $sourceDllLastWrite = (Get-ChildItem $sourceDll).LastWriteTime
+          if (Test-Path $releaseSourceDll) {
+            $releaseSourceDllLastWrite = (Get-ChildItem $releaseSourceDll).LastWriteTime
+          } else {
+            $releaseSourceDllLastWrite = $sourceDllLastWrite
+          }
+        } else {
+          $releaseSourceDllLastWrite = $sourceDllLastWrite
+	    }
+
+	    $dllFolder = "$dest\$platform"
+	    $copyText = "$sourceDll -> $dllFolder"
+	    if ($sourceDllLastWrite -lt $releaseSourceDllLastWrite) {
+          $errorOutput = $errorOutput + "$sourceDll`n"
+          $releaseDllsNewer = $true
+        } else {
+
+          if (Test-Path $sourceDll) {
+            Copy-Item $sourceDll $dllFolder -errorAction Stop
+            $output = $output + "$sourceDll`n"
+            $fileCopyCount = $fileCopyCount + 1
+            $sourcePdb = $sourceDll -replace ".dll",".pdb"
+
+            if (Test-Path $sourcePdb) {
+              Copy-Item $sourcePdb $dllFolder
+              $fileCopyCount = $fileCopyCount + 1
+            }
+          }
+        }
       }
-
-	  $dllFolder = $dest
-	  $copyText = "$sourceDll -> $dllFolder"
-	  if ($sourceDllLastWrite -lt $releaseSourceDllLastWrite) {
-        $errorOutput = $errorOutput + "$sourceDll`n"
-        $releaseDllsNewer = $true
-      } else {
-        $output = $output + "$sourceDll`n"
-
-        Copy-Item $sourceDll $dllFolder -errorAction Stop
-        $fileCopyCount = $fileCopyCount + 1
-        $sourcePdb = $sourceDll -replace ".dll",".pdb"
-        Copy-Item $sourcePdb $dllFolder
-        $fileCopyCount = $fileCopyCount + 1
+      else {
+        Write-Host "Project dlls for $project not recognised"
+	    exit
       }
-    }
-    else {
-      Write-Host "Project dlls for $project not recognised"
-	  exit
     }
   }
   
@@ -123,27 +138,31 @@ function RevertDlls([String] $rootFolder, [String] $source, [String] $dest) {
   
   $fileCopyCount = 0
 
-  foreach ($dll in $obj.$project) {
-    if ($dll.dll) {
-      $dllFile = $dll.dll
-      $dllPath = $dll.path
-	  $dllPath = "$fullSource\source\$dllPath"
-	  	  
-	  $sourceDll = "$dllPath\$dllFile"
-	  $dllFolder = $dest
-	  $revertFile = "$dllFolder\$dllFile"
+  $platforms = "", "x86", "x64"
+  foreach ($platform in $platforms) {
+  "$platform"
+    foreach ($dll in $obj.$project) {
+      if ($dll.dll) {
+        $dllFile = $dll.dll
+	    $dllFolder = $dest
+	    $revertFile = "$dllFolder\$platform\$dllFile"
 	  
-	  Write-Host $revertFile
-	  svn revert $revertFile
-      $revertFile = $revertFile -replace ".dll",".pdb"
-	  # This messes up the \dlls\ part of the path so just do this again - fix it properly later
-      $revertFile = $revertFile -replace ".pdbs","\dlls"
-	  Write-Host $revertFile
-	  svn revert $revertFile
-    }
-    else {
-      Write-Host "Project dlls for $project not recognised"
-	  exit
+	    Write-Host $revertFile
+		if (Test-Path $revertFile) {
+	      svn revert $revertFile
+        }
+        $revertFile = $revertFile -replace ".dll",".pdb"
+	    # This messes up the \dlls\ part of the path so just do this again - fix it properly later
+        $revertFile = $revertFile -replace ".pdbs","\dlls"
+	    Write-Host $revertFile
+		if (Test-Path $revertFile) {
+	      svn revert $revertFile
+        }
+      }
+      else {
+        Write-Host "Project dlls for $project not recognised"
+  	    exit
+      }
     }
   }
 }
