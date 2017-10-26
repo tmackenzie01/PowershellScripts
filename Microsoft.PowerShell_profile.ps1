@@ -882,7 +882,7 @@ function Refresh-RedmineRepos() {
 
   Write-Host "Refreshing..."
   foreach ($proj in $projects) {
-    Write-Host $proj
+    Write-Host "$proj ($rm/projects/$proj/repository)"
     curl("$rm/projects/$proj/repository") > $null
   }
   Write-Host "Complete"
