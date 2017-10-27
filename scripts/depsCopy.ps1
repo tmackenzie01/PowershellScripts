@@ -60,7 +60,7 @@ function CopyDlls([String] $rootFolder, [String] $source, [String] $dest) {
   	    $dllPath = "$fullSource\source\$dllPath"
 	    $sourceDll = "$dllPath\$dllFile"
 	    # Add platform path to Debug path
-	    $sourceDll = $sourceDll -replace "\\Debug\\", "\$platform\Release\"
+	    $sourceDll = $sourceDll -replace "\\Debug\\", "\$platform\Debug\"
 	    # Add platform path when creating Release path
 	    $releaseSourceDll = $sourceDll -replace "\\Debug\\", "\$platform\Release\"
 
