@@ -26,7 +26,7 @@ Allows specification of flavour, can be in quotes with spaces, or no quotes and 
 http://github.com/tmackenzie01/PowershellScripts
 #>
 
-Param($versionToInstall, [switch]$uninstallVersions, [switch]$gallery7, [switch]$testGallery, [switch]$testGallery7, $flavour, $platform)
+Param($versionToInstall, [switch]$uninstallVersions, [switch]$gallery7, [switch]$testGallery, [switch]$testGallery7, [switch]$galleryRFS, $flavour, $platform)
 
 # Functionality to add
 #   Flavour selection
@@ -222,82 +222,110 @@ if ($gallery7) {
 }
 
 # If no version specified then we list the versions
-if ((!$PSBoundParameters.ContainsKey('versionToInstall')) -and (!$PSBoundParameters.ContainsKey('testGallery')) -and (!$PSBoundParameters.ContainsKey('testGallery7'))) {
+if (!$PSBoundParameters.ContainsKey('versionToInstall')) {
   $versionXobjs = @()
-  $versionsX = Get-ChildItem "$galleryDir\$programTV\$searchVersion*" | ForEach {
+  $nonTestGallerySearch = $false
+  
+  if ($PSBoundParameters.ContainsKey('galleryRFS')) {
+    $searchGalleryDir = "$galleryDir\$programRFS\2.6.x\*"
+    $nonTestGallerySearch = $true
+  } else {
+    if ((!$PSBoundParameters.ContainsKey('testGallery')) -and (!$PSBoundParameters.ContainsKey('testGallery7'))) {
+      $searchGalleryDir = "$galleryDir\$programTV\$searchVersion*"
+      $nonTestGallerySearch = $true
+    }
+  }
+  
+  if ($nonTestGallerySearch) {
+    $versionsX = Get-ChildItem $searchGalleryDir | ForEach {
     $versionXobjs += New-Object PSObject -Property @{
-    'Major' = $searchVersion
-    'Minor' = $_.Name.split(".")[1]
-    'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+      'Major' = $_.Name.split(".")[0]
+      'Minor' = $_.Name.split(".")[1]
+      'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+      }
     }
-  }
   
-  $versionActualobjs = @()
-  foreach ($versionX in $versionXobjs) {
-    $parentVersion = $versionX.Major.toString() + "." + $versionX.Minor.toString() + ".x" + "\"
+    # With galleryRFS switch on we do this next part, but it will get no results
+    $versionActualobjs = @()
+    foreach ($versionX in $versionXobjs) {
+      $parentVersion = $versionX.Major.toString() + "." + $versionX.Minor.toString() + ".x" + "\"
 	
-	# ?{ $_.PSIsContainer } gets directories only
-	if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA") {
-      $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA" | ?{ $_.PSIsContainer } | ForEach {
-        $versionActualobjs += New-Object PSObject -Property @{
-          'Major' = $searchVersion
-          'Minor' = $_.Name.split(".")[1]
-          'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
-          'Revision' = $_.Name.split(".")[2]
-          'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
-		}
-	  }
-    }
-	if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS") {
-      $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS" | ?{ $_.PSIsContainer } | ForEach {
-        $versionActualobjs += New-Object PSObject -Property @{
-          'Major' = $searchVersion
-          'Minor' = $_.Name.split(".")[1]
-          'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
-          'Revision' = $_.Name.split(".")[2]
-          'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
-		}
-	  }
-    }
-	if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC") {
-      $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC" | ?{ $_.PSIsContainer } | ForEach {
-        $versionActualobjs += New-Object PSObject -Property @{
-          'Major' = $searchVersion
-          'Minor' = $_.Name.split(".")[1]
-          'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
-          'Revision' = $_.Name.split(".")[2]
-          'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
-		}
-	  }
-    }
-	if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM") {
-      $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM" | ?{ $_.PSIsContainer } | ForEach {
-        $versionActualobjs += New-Object PSObject -Property @{
-          'Major' = $searchVersion
-          'Minor' = $_.Name.split(".")[1]
-          'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
-          'Revision' = $_.Name.split(".")[2]
-          'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
-		}
-	  }
-    }
-  }  
-  
-  $versionsAvail = $versionActualobjs | Sort-Object Major, MinorPL, RevisionPL -descending -unique | Select-Object Major, Minor, Revision -first 30
+      # ?{ $_.PSIsContainer } gets directories only
+  	  if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA") {
+        $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA" | ?{ $_.PSIsContainer } | ForEach {
+          $versionActualobjs += New-Object PSObject -Property @{
+            'Major' = $searchVersion
+            'Minor' = $_.Name.split(".")[1]
+            'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+            'Revision' = $_.Name.split(".")[2]
+            'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
+		  }
+	    }
+      }
+	  if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS") {
+        $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS" | ?{ $_.PSIsContainer } | ForEach {
+          $versionActualobjs += New-Object PSObject -Property @{
+            'Major' = $searchVersion
+            'Minor' = $_.Name.split(".")[1]
+            'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+            'Revision' = $_.Name.split(".")[2]
+            'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
+		  }
+	    }
+      }
+	  if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC") {
+        $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC" | ?{ $_.PSIsContainer } | ForEach {
+          $versionActualobjs += New-Object PSObject -Property @{
+            'Major' = $searchVersion
+            'Minor' = $_.Name.split(".")[1]
+            'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+            'Revision' = $_.Name.split(".")[2]
+            'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
+		  }
+	    }
+      }
+	  if (Test-Path "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM") {
+        $versionsActual = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM" | ?{ $_.PSIsContainer } | ForEach {
+          $versionActualobjs += New-Object PSObject -Property @{
+            'Major' = $searchVersion
+            'Minor' = $_.Name.split(".")[1]
+            'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+            'Revision' = $_.Name.split(".")[2]
+            'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
+		  }
+	    }
+      }
+	
+	  # RFS slightly different
+	  if (Test-Path "$galleryDir\$programRFS\$parentVersion") {
+        $versionsActual = Get-ChildItem "$galleryDir\$programRFS\$parentVersion" | ?{ $_.PSIsContainer } | ForEach {
+          $versionActualobjs += New-Object PSObject -Property @{
+            'Major' = $_.Name.split(".")[0]
+            'Minor' = $_.Name.split(".")[1]
+            'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+            'Revision' = $_.Name.split(".")[2]
+            'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
+		  }
+	    }
+      }
+    }  
+   
+    $versionsAvail = $versionActualobjs | Sort-Object Major, MinorPL, RevisionPL -descending -unique | Select-Object Major, Minor, Revision -first 30
 
-  [int]$fileCount = 1
-  foreach ($versionAvail in $versionsAvail) {
-    $displayText = $fileCount.ToString().PadRight(4) + " " + $versionAvail.Major + "." + $versionAvail.Minor + "." + $versionAvail.Revision
-    Write-Host $displayText
-    $fileCount = $fileCount + 1
-  }
+    [int]$fileCount = 1
+    foreach ($versionAvail in $versionsAvail) {
+      $displayText = $fileCount.ToString().PadRight(4) + " " + $versionAvail.Major + "." + $versionAvail.Minor + "." + $versionAvail.Revision
+      Write-Host $displayText
+      $fileCount = $fileCount + 1
+    }
   
-  if ($fileCount -eq 1) {
-    "No versions found"
-	return
-  } else {  
-    $selection = Read-Host "Enter a single number for the version you wish to install"
-    $versionToInstall = $versionsAvail[$selection-1].Major.toString() + "." + $versionsAvail[$selection-1].Minor.toString() + "." + $versionsAvail[$selection-1].Revision.toString()
+    if ($fileCount -eq 1) {
+      "No versions found"
+	  return
+    } else {  
+      $selection = Read-Host "Enter a single number for the version you wish to install"
+      $versionToInstall = $versionsAvail[$selection-1].Major.toString() + "." + $versionsAvail[$selection-1].Minor.toString() + "." + $versionsAvail[$selection-1].Revision.toString()
+    }
   }
 }
 
@@ -340,10 +368,9 @@ if (($testGallery) -or ($testGallery7)) {
     $versionC = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC" | Where-Object { $_.Name -like "2017*" } | Sort-Object -descending | Select-Object Name -first 1
     $versionC = $versionC.Name
     $versionM = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM" | Where-Object { $_.Name -like "2017*" } | Sort-Object -descending | Select-Object Name -first 1
-    $versionM = $versionM.Name  
+    $versionM = $versionM.Name
   }
-} else
-{
+} else {
   $versionObject = New-Object PSObject -Property @{
     'Major' = $versionToInstall.split(".")[0]
     'Minor' = $versionToInstall.split(".")[1]
@@ -429,32 +456,56 @@ if (($testGallery) -or ($testGallery7)) {
 	    }
       }
     }
+	
+    if (Test-Path "$galleryDir\$programRFS\$parentVersion\$platform\$versionText") {
+      $versionRFS = $versionText
+	  # Check if the exe is platform agnostic or platform specific
+      if (Test-Path "$galleryDir\$programRFS\$parentVersion\$programTVRFS\$versionText\$programWithPlatfomRFSExe") {
+	    $programRFSFound = $true
+	  } else {
+	    $programWithPlatfomRFSExe = $programRFSExe.Replace(".exe", "_$selectedPlatform.exe")
+        if (Test-Path "$galleryDir\$programRFS\$parentVersion\$programTVRFS\$versionText\$programWithPlatfomRFSExe") {
+	      $programRFSFound = $true
+	    }
+      }
+    }
   }
 
-  if ((!$programAFound) -or (!$programSFound) -or (!$programCFound) -or (!$programMFound)) {
-    if (!$programAFound) {
-      Write-Host "$programTVAExe not found for $versionA";
+  
+  if (!($PSBoundParameters.ContainsKey('galleryRFS'))) {
+    if ((!$programAFound) -or (!$programSFound) -or (!$programCFound) -or (!$programMFound)) {
+      if (!$programAFound) {
+        Write-Host "$programTVAExe not found for $versionA";
+      }
+      if (!$programSFound) {
+        Write-Host "$programTVSExe not found for $versionS"
+      }
+      if (!$programCFound) {
+        Write-Host "$programTVCExe not found for $versionC"
+      }
+      if (!$programMFound) {
+        Write-Host "$programTVMExe not found for $versionM"
+      }
+      return
     }
-    if (!$programSFound) {
-      Write-Host "$programTVSExe not found for $versionS"
-    }
-    if (!$programCFound) {
-      Write-Host "$programTVCExe not found for $versionC"
-    }
-    if (!$programMFound) {
-      Write-Host "$programTVMExe not found for $versionM"
-    }
-	return
   }
 }
 
-Write-Host "Version detection is as follows: `n"
-Write-Host "$programTVA $versionA ($selectedPlatform)"
-Write-Host "$programTVS $versionS ($selectedPlatform)"
-Write-Host "$programTVC $versionC ($selectedPlatform)"
-Write-Host "$programTVM $versionM ($selectedPlatform)"
-if ($testGallery) {
-  Write-Host "$programR $versionR ($selectedPlatform)"
+# Only show RFS if we have param galleryRFS or testGallery x86
+$showRFS = (($PSBoundParameters.ContainsKey('galleryRFS')) -or $testGallery)
+
+if (!($PSBoundParameters.ContainsKey('galleryRFS'))) {
+  Write-Host "Version detection is as follows: `n"
+  Write-Host "$programTVA $versionA ($selectedPlatform)"
+  Write-Host "$programTVS $versionS ($selectedPlatform)"
+  Write-Host "$programTVC $versionC ($selectedPlatform)"
+  Write-Host "$programTVM $versionM ($selectedPlatform)"
+  if ($testGallery) {
+    Write-Host "$programR $versionR ($selectedPlatform)"
+  }
+}
+
+if ($showRFS) {
   if ($selectedPlatform -eq "x86") {
     Write-Host "$programRFS $versionRFS ($selectedPlatform only)"
   } else {
@@ -473,9 +524,9 @@ if ($confirmation -Match 'n') {
 	Write-Host "4   Multiplexer"
 	if ($testGallery) {
 	  Write-Host "5   Recorder"
-	  if ($selectedPlatform -eq "x86") {
-	    Write-Host "6   RFS"
-	  }
+	}
+	if ($showRFS) {
+	  Write-Host "6   RFS"
 	}
     $selection = Read-Host "Enter a single number or CSV list of numbers for the programs you wish to install"
 	foreach($singleSelection in $selection.split(",")) {
@@ -483,12 +534,8 @@ if ($confirmation -Match 'n') {
 	  if ($singleSelection.trim() -eq 2) { $installS = $true }
 	  if ($singleSelection.trim() -eq 3) { $installC = $true }
 	  if ($singleSelection.trim() -eq 4) { $installM = $true }
-	  if ($testGallery) {
-	    if ($singleSelection.trim() -eq 5) { $installR = $true }
-	    if ($selectedPlatform -eq "x86") {
-	      if ($singleSelection.trim() -eq 6) { $installRFS = $true }
-		}
-	  }
+	  if ($singleSelection.trim() -eq 5) { $installR = $true }
+	  if ($singleSelection.trim() -eq 6) { $installRFS = $true }
 	}
   } else {
     $installA = $true
@@ -524,9 +571,9 @@ if ($testGallery) {
     & "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName\$versionR\$programWithPlatfomRExe" /silent /suppressmsgboxes | Out-Null
     if ($LastExitCode -ne 0) { Write-Host "Error"; return}
   }
-  if ($installRFS -eq $true) {
-    Write-Host "Installing Release $programRFS $versionRFS"
-    & "$galleryDir\$programRFS\$releaseFolderName\$versionRFS\$programWithPlatfomRFSExe" /silent /suppressmsgboxes | Out-Null
-    if ($LastExitCode -ne 0) { Write-Host "Error"; return}
-  }
+}
+if ($installRFS -eq $true) {
+  Write-Host "Installing Release $programRFS $versionRFS"
+  & "$galleryDir\$programRFS\$parentVersion\$versionRFS\$programWithPlatfomRFSExe" /silent /suppressmsgboxes | Out-Null
+  if ($LastExitCode -ne 0) { Write-Host "Error"; return}
 }
