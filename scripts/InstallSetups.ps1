@@ -576,4 +576,9 @@ if ($installRFS -eq $true) {
   Write-Host "Installing Release $programRFS $versionRFS"
   & "$galleryDir\$programRFS\$parentVersion\$versionRFS\$programWithPlatfomRFSExe" /silent /suppressmsgboxes | Out-Null
   if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+
+  $startServiceResponse = Read-Host "Do you want to start the RFSService? (y/n)"
+  if ($startServiceResponse -Match 'y') {
+    Start-Service RFSService
+  }
 }
