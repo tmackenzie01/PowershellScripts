@@ -888,6 +888,31 @@ function Refresh-RedmineRepos() {
   Write-Host "Complete"
 }
 
+function Get-Netstat($port) {
+  $netstatOutput = netstat -ano
+  if ($PSBoundParameters.ContainsKey('port')) {
+    $netstatOutput = $netstatOutput | Where-Object { $_.Contains(":$port") }
+  }
+
+  $output = ""
+  foreach($outputLine in $netstatOutput) {
+    $outputLineSplit = $outputLine -split "\s+"
+	#$protocolType = $outputLineSplit[1]
+	#$source = $outputLineSplit[2]
+	#$dest = $outputLineSplit[3]
+	$state = $outputLineSplit[4]
+
+	$outputLineProcessID = $outputLineSplit[5]
+	if (![string]::IsNullOrEmpty($outputLineProcessID)) {
+	  $outputLineProcessName = (Get-Process -Id $outputLineProcessID).ProcessName
+	  $outputLine = $outputLine -replace " $outputLineProcessID", " $outputLineProcessName"
+	}
+	$output = $output + "`n" + $outputLine
+  }
+
+  return $output.Split("`n")
+}
+
 function curl($url) {
   $r = [System.Net.WebRequest]::Create("http://$url/")
   $resp = $r.GetResponse()
