@@ -71,6 +71,8 @@ $programRFSExe = $($localInfo.ProgramRFSExe)
 
 $programRInstallExe = $($localInfo.ProgramRInstallExe)
 
+$serviceProgramTVS = $($localInfo.ServiceProgramTVS)
+
 $programFilesParentFolder = $($localInfo.ProgramFilesParentFolder)
 $programFilesFolderA = $($localInfo.ProgramFilesFolderA)
 $programFilesFolderS = $($localInfo.ProgramFilesFolderS)
@@ -551,6 +553,8 @@ if ($installA -eq $true) {
   if ($LastExitCode -ne 0) { Write-Host "Error"; return}
 }
 if ($installS -eq $true) {
+  Write-Host "Stop $serviceProgramTVS (if installed)"
+  Stop-Service "$serviceProgramTVS" -ErrorAction "SilentlyContinue"
   Write-Host "Installing $selectedFlavour $programTVS $versionS"
   & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$versionS\$programWithPlatfomTVSExe" /silent /suppressmsgboxes | Out-Null
   if ($LastExitCode -ne 0) { Write-Host "Error"; return}
