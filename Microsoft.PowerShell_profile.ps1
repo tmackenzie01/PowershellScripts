@@ -905,7 +905,7 @@ function Get-Netstat($port) {
 	$outputLineProcessID = $outputLineSplit[5]
 	if (![string]::IsNullOrEmpty($outputLineProcessID)) {
 	  $outputLineProcessName = (Get-Process -Id $outputLineProcessID).ProcessName
-	  $outputLine = $outputLine -replace " $outputLineProcessID", " $outputLineProcessName"
+	  $outputLine = $outputLine -replace " $outputLineProcessID", " $outputLineProcessName ($outputLineProcessID)"
 	}
 	$output = $output + "`n" + $outputLine
   }
