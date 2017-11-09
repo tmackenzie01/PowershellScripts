@@ -577,8 +577,12 @@ if ($testGallery) {
   }
 }
 if ($installRFS -eq $true) {
+  $extraParentFolder = ""
+  if ($testGallery) {
+    $extraParentFolder = "Release"
+  }
   Write-Host "Installing Release $programRFS $versionRFS"
-  & "$galleryDir\$programRFS\$parentVersion\$versionRFS\$programWithPlatfomRFSExe" /silent /suppressmsgboxes | Out-Null
+  & "$galleryDir\$programRFS\$parentVersion\$extraParentFolder\$versionRFS\$programWithPlatfomRFSExe" /silent /suppressmsgboxes | Out-Null
   if ($LastExitCode -ne 0) { Write-Host "Error"; return}
 
   $startServiceResponse = Read-Host "Do you want to start the RFSService? (y/n)"
