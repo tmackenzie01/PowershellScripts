@@ -20,4 +20,7 @@ tsql "INSERT tblDatabaseLog (sequence_number) SELECT sequence_number FROM tblSer
 tsql "ALTER TABLE tblServerNode DROP CONSTRAINT DF__tblServer__seque__2F25DA6B"
 tsql "ALTER TABLE tblServerNode DROP COLUMN sequence_number"
 
+tsql "UPDATE tblVersionNumber SET is_current = 0"
+tsql "INSERT INTO tblVersionNumber VALUES (6,100,0,1,2,6)"
+
 tsql "SELECT * FROM tblDatabaseLog" -tidy
