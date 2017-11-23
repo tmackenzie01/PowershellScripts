@@ -27,6 +27,7 @@ Set-Alias tsharkExe "C:\Program Files\Wireshark\tshark.exe"
 Set-Alias tsqlTidyUp "$mydocs\..\source\repos\tsqltidyup\tsqltidyup\tsqltidyup\bin\debug\tsqltidyup.exe"
 Set-Alias sqlite "C:\Program Files (x86)\SQLiteTools\sqlite3.exe"
 Set-Alias iscc "C:\Program Files (x86)\Inno Setup 5\iscc.exe"
+Set-Alias handleExe "C:\Program Files (x86)\SysInternals\handle.exe"
 
 # Global variables
 $tsqlCustomerBackupsLocation = "$mydocs\Customer DBs"
@@ -920,6 +921,11 @@ function curl($url) {
   $sr = new-object System.IO.StreamReader $reqstream
   $result = $sr.ReadToEnd()
   return $result
+}
+
+# Uses SysInternals handle exe to list processes that have a file open
+function Get-FileHandle($file) {
+  handleExe $file
 }
 
 function sign ($filename) {
