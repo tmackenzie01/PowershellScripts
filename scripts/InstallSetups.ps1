@@ -555,6 +555,8 @@ if ($installA -eq $true) {
 if ($installS -eq $true) {
   Write-Host "Stop $serviceProgramTVS (if installed)"
   Stop-Service "$serviceProgramTVS" -ErrorAction "SilentlyContinue"
+  Write-Host "Set $serviceProgramTVS to manual start (if installed)"
+  Set-Service "$serviceProgramTVS" -startuptype "manual" -ErrorAction "SilentlyContinue"
   Write-Host "Installing $selectedFlavour $programTVS $versionS"
   & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$versionS\$programWithPlatfomTVSExe" /silent /suppressmsgboxes | Out-Null
   if ($LastExitCode -ne 0) { Write-Host "Error"; return}
