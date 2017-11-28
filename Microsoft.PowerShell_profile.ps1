@@ -928,6 +928,21 @@ function Get-FileHandle($file) {
   handleExe $file
 }
 
+# See https://serverfault.com/q/702828 for the event log ids
+function Get-RestartTimes() {
+  $output = $output + "Run systeminfo | find ""System Boot Time"" from a dos prompt`n`n"
+  $output = $output + "This only displays system event log times for the following`n"
+  $output = $output + "Event log starting (last thing done before startup)`n" #6005
+  $output = $output + "Event log stopping (last thing done before shutdown)`n" #6006
+  $output = $output + "Previous shutdown unexpected`n" #6008
+  $output = $output + "Displays windows information at boot time`n`n" #6009
+
+  Write-Host $output
+
+  # not capturing the output of this command and adding it to $output as it can be slow
+  Get-WinEvent @{logname='system'} | Where-Object { (($_.Id -eq 6005) -or ($_.Id -eq 6006) -or ($_.Id -eq 6008) -or ($_.Id -eq 6009)) } | Format-Table -Property TimeCreated, Message
+}
+
 function sign ($filename) {
   $cert = @(gci cert:\currentuser\My -codesign)[0]
   Set-AuthenticodeSignature $filename $cert
