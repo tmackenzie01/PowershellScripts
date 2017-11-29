@@ -29,6 +29,9 @@ Set-Alias sqlite "C:\Program Files (x86)\SQLiteTools\sqlite3.exe"
 Set-Alias iscc "C:\Program Files (x86)\Inno Setup 5\iscc.exe"
 Set-Alias handleExe "C:\Program Files (x86)\SysInternals\handle.exe"
 
+# Remove alias for fc (Format-Custom) so we can use it instead for a file comparision function
+Remove-Item alias:fc -Force
+
 # Global variables
 $tsqlCustomerBackupsLocation = "$mydocs\Customer DBs"
 $tsqlAutomaticBackupLocation = "$tsqlCustomerBackupsLocation\Automatic backups"
@@ -946,6 +949,11 @@ function Get-RestartTimes() {
 function sign ($filename) {
   $cert = @(gci cert:\currentuser\My -codesign)[0]
   Set-AuthenticodeSignature $filename $cert
+}
+
+function fc([Parameter(Mandatory=$true)] [String]$file1, [Parameter(Mandatory=$true)] [String]$file2) {
+  Write-Host "This overrides the Format-Custom fc alias"
+  Compare-Object (Get-Content $file1) (Get-Content $file2)
 }
 
 function grep($searchString) {
