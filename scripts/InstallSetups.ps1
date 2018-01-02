@@ -364,20 +364,21 @@ if (($testGallery) -or ($testGallery7)) {
   $programWithPlatfomTVMExe = $programTVMExe.Replace(".exe", "_$selectedPlatform.exe")
   $programWithPlatfomRExe = $programRInstallExe.Replace(".exe", "_$selectedPlatform.exe")
   $programWithPlatfomRFSExe = $programRFSExe.Replace(".exe", "_$selectedPlatform.exe")
+  $yearRegex = "201[7,8]*"
 
   if ($testGallery) {
-    $versionA = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA" | Where-Object { (($_.Name -like "201[7,8]*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
+    $versionA = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA" | Where-Object { (($_.Name -like $yearRegex) -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionA = $versionA.Name
-    $versionS = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
+    $versionS = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS" | Where-Object { (($_.Name -like $yearRegex) -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionS = $versionS.Name
-    $versionC = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
+    $versionC = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC" | Where-Object { (($_.Name -like $yearRegex) -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionC = $versionC.Name
-    $versionM = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
+    $versionM = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM" | Where-Object { (($_.Name -like $yearRegex) -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionM = $versionM.Name
-    $versionR = Get-ChildItem "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
+    $versionR = Get-ChildItem "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName" | Where-Object { (($_.Name -like $yearRegex) -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionR = $versionR.Name
 	if ($selectedPlatform -eq "x86") {
-      $versionRFS = Get-ChildItem "$galleryDir\$programRFS\$parentVersion$releaseFolderName" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
+      $versionRFS = Get-ChildItem "$galleryDir\$programRFS\$parentVersion$releaseFolderName" | Where-Object { (($_.Name -like $yearRegex) -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
       $versionRFS = $versionRFS.Name
 	} else {
 	  $versionRFS = "x64 not supported"
@@ -385,13 +386,13 @@ if (($testGallery) -or ($testGallery7)) {
   } else {
     $programTVC = "$programTVC" + "7"
     $programTVM = "$programTVM" + "7"
-    $versionA = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA" | Where-Object { (($_.Name -like "2017*") -and ($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
+    $versionA = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA" | Where-Object { (($_.Name -like $yearRegex) -and ($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionA = $versionA.Name
-    $versionS = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS" | Where-Object { (($_.Name -like "2017*") -and ($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
+    $versionS = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS" | Where-Object { (($_.Name -like $yearRegex) -and ($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionS = $versionS.Name
-    $versionC = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC" | Where-Object { $_.Name -like "2017*" } | Sort-Object -descending | Select-Object Name -first 1
+    $versionC = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC" | Where-Object { $_.Name -like $yearRegex } | Sort-Object -descending | Select-Object Name -first 1
     $versionC = $versionC.Name
-    $versionM = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM" | Where-Object { $_.Name -like "2017*" } | Sort-Object -descending | Select-Object Name -first 1
+    $versionM = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM" | Where-Object { $_.Name -like $yearRegex } | Sort-Object -descending | Select-Object Name -first 1
     $versionM = $versionM.Name
   }
 } else {
