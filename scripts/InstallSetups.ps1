@@ -26,7 +26,7 @@ Allows specification of flavour, can be in quotes with spaces, or no quotes and 
 http://github.com/tmackenzie01/PowershellScripts
 #>
 
-Param($versionToInstall, [switch]$uninstallVersions, [switch]$gallery7, [switch]$testGallery, [switch]$testGallery7, [switch]$galleryRFS, $flavour, $platform)
+Param($versionToInstall, [switch]$uninstallVersions, [switch]$gallery7, [switch]$testGallery, [switch]$testGallery7, [switch]$galleryRFS, [switch]$galleryRecorder, $flavour, $platform)
 
 # Functionality to add
 #   Flavour selection
@@ -232,9 +232,14 @@ if (!$PSBoundParameters.ContainsKey('versionToInstall')) {
     $searchGalleryDir = "$galleryDir\$programRFS\2.6.x\*"
     $nonTestGallerySearch = $true
   } else {
-    if ((!$PSBoundParameters.ContainsKey('testGallery')) -and (!$PSBoundParameters.ContainsKey('testGallery7'))) {
-      $searchGalleryDir = "$galleryDir\$programTV\$searchVersion*"
+    if ($PSBoundParameters.ContainsKey('galleryRecorder')) {
+      $searchGalleryDir = "$galleryDir\$ProgramR\1.12*"
       $nonTestGallerySearch = $true
+    } else {
+      if ((!$PSBoundParameters.ContainsKey('testGallery')) -and (!$PSBoundParameters.ContainsKey('testGallery7'))) {
+        $searchGalleryDir = "$galleryDir\$programTV\$searchVersion*"
+        $nonTestGallerySearch = $true
+      }
     }
   }
   
@@ -310,6 +315,19 @@ if (!$PSBoundParameters.ContainsKey('versionToInstall')) {
 		  }
 	    }
       }
+
+	  # Recorder slightly different again
+	  if (Test-Path "$galleryDir\$programR\$parentVersion") {
+        $versionsActual = Get-ChildItem "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName" | ?{ $_.PSIsContainer } | ForEach {
+          $versionActualobjs += New-Object PSObject -Property @{
+            'Major' = $_.Name.split(".")[0]
+            'Minor' = $_.Name.split(".")[1]
+            'MinorPL' = $_.Name.split(".")[1].PadLeft(5)
+            'Revision' = $_.Name.split(".")[2]
+            'RevisionPL' = $_.Name.split(".")[2].PadLeft(5)
+		  }
+	    }
+      }
     }  
    
     $versionsAvail = $versionActualobjs | Sort-Object Major, MinorPL, RevisionPL -descending -unique | Select-Object Major, Minor, Revision -first 30
@@ -326,6 +344,10 @@ if (!$PSBoundParameters.ContainsKey('versionToInstall')) {
 	  return
     } else {  
       $selection = Read-Host "Enter a single number for the version you wish to install"
+
+      # Clear all the read prompt response for this script - do it here in case we exit the script early
+      Clear-History -Command "Read-Host"
+
       $versionToInstall = $versionsAvail[$selection-1].Major.toString() + "." + $versionsAvail[$selection-1].Minor.toString() + "." + $versionsAvail[$selection-1].Revision.toString()
     }
   }
@@ -344,7 +366,7 @@ if (($testGallery) -or ($testGallery7)) {
   $programWithPlatfomRFSExe = $programRFSExe.Replace(".exe", "_$selectedPlatform.exe")
 
   if ($testGallery) {
-    $versionA = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
+    $versionA = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA" | Where-Object { (($_.Name -like "201[7,8]*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionA = $versionA.Name
     $versionS = Get-ChildItem "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS" | Where-Object { (($_.Name -like "2017*") -and !($_.Name -like "*_7")) } | Sort-Object -descending | Select-Object Name -first 1
     $versionS = $versionS.Name
@@ -382,15 +404,17 @@ if (($testGallery) -or ($testGallery7)) {
   # Create parent version folder
   $parentVersion = $versionObject.Major + "." + $versionObject.Minor + ".x" + "\"
 
-  # Check versions supports flavours (started 6.17)
-  # This check doesn't work for single digit minor comparing to double digit minot (17)
-  if (($versionObject.Major -le 6) -and ($versionObject.Minor -lt 17)) {
-    $selectedFlavourFolderName = "" # clear the flavour sub-folder
-  }
-  # Check versions supports flavours (started 6.17)
-  # This check doesn't work for single digit minor comparing to double digit minot (21)
-  if (($versionObject.Major -le 6) -and ($versionObject.Minor -lt 21)) {
-    $programTVAExe = $programTVAOldExe
+  if (!($PSBoundParameters.ContainsKey('galleryRFS')) -and !($PSBoundParameters.ContainsKey('galleryRecorder'))) {
+    # Check versions supports flavours (started 6.17)
+    # This check doesn't work for single digit minor comparing to double digit minot (17)
+    if (($versionObject.Major -le 6) -and ($versionObject.Minor -lt 17)) {
+      $selectedFlavourFolderName = "" # clear the flavour sub-folder
+    }
+    # Check versions supports flavours (started 6.17)
+    # This check doesn't work for single digit minor comparing to double digit minot (21)
+    if (($versionObject.Major -le 6) -and ($versionObject.Minor -lt 21)) {
+      $programTVAExe = $programTVAOldExe
+    }
   }
 
   $programAFound = $false
@@ -459,6 +483,19 @@ if (($testGallery) -or ($testGallery7)) {
       }
     }
 	
+    if (Test-Path "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName\$platform\$versionText") {
+      $versionR = $versionText
+	  # Check if the exe is platform agnostic or platform specific
+      if (Test-Path "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName\$programTVRFS\$versionText\$programWithPlatfomRExe") {
+	    $programRFound = $true
+	  } else {
+	    $programWithPlatfomRExe = $ProgramRInstallExe.Replace(".exe", "_$selectedPlatform.exe")
+        if (Test-Path "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName\$programTVR\$versionText\$programWithPlatfomRExe") {
+	      $programRFound = $true
+	    }
+      }
+    }
+
     if (Test-Path "$galleryDir\$programRFS\$parentVersion\$platform\$versionText") {
       $versionRFS = $versionText
 	  # Check if the exe is platform agnostic or platform specific
@@ -474,7 +511,7 @@ if (($testGallery) -or ($testGallery7)) {
   }
 
   
-  if (!($PSBoundParameters.ContainsKey('galleryRFS'))) {
+  if (!($PSBoundParameters.ContainsKey('galleryRFS')) -and !($PSBoundParameters.ContainsKey('galleryRecorder'))) {
     if ((!$programAFound) -or (!$programSFound) -or (!$programCFound) -or (!$programMFound)) {
       if (!$programAFound) {
         Write-Host "$programTVAExe not found for $versionA";
@@ -495,14 +532,17 @@ if (($testGallery) -or ($testGallery7)) {
 
 # Only show RFS if we have param galleryRFS or testGallery x86
 $showRFS = (($PSBoundParameters.ContainsKey('galleryRFS')) -or $testGallery)
+$showRecorder = (($PSBoundParameters.ContainsKey('galleryRecorder')) -or $testGallery)
+# Show Vision if galleryRFS or galleryRecorder not selected
+$showVision = !(($PSBoundParameters.ContainsKey('galleryRFS')) -or ($PSBoundParameters.ContainsKey('galleryRFS')))
 
-if (!($PSBoundParameters.ContainsKey('galleryRFS'))) {
+if (!($PSBoundParameters.ContainsKey('galleryRFS')) -and !($PSBoundParameters.ContainsKey('galleryRecorder'))) {
   Write-Host "Version detection is as follows: `n"
   Write-Host "$programTVA $versionA ($selectedPlatform)"
   Write-Host "$programTVS $versionS ($selectedPlatform)"
   Write-Host "$programTVC $versionC ($selectedPlatform)"
   Write-Host "$programTVM $versionM ($selectedPlatform)"
-  if ($testGallery) {
+  if ($showRecorder) {
     Write-Host "$programR $versionR ($selectedPlatform)"
   }
 }
@@ -515,22 +555,40 @@ if ($showRFS) {
   }
 }
 
+if ($showRecorder) {
+  if ($selectedPlatform -eq "x86") {
+    Write-Host "$programR $versionR ($selectedPlatform only)"
+  } else {
+    Write-Host "$programR $versionR"
+  }
+}
+
 $confirmation = Read-Host "Do you want to install these versions? (y/n) Or a selection (s)"
+
+# Clear all the read prompt response for this script - do it here in case we exit the script early
+Clear-History -Command "Read-Host"
+
 if ($confirmation -Match 'n') {
   return
 } else {
   if ($confirmation -Match 's') {
-	Write-Host "`n1   Admin"
-	Write-Host "2   Server"
-	Write-Host "3   Client"
-	Write-Host "4   Multiplexer"
-	if ($testGallery) {
+    if ($showVision) {
+	  Write-Host "`n1   Admin"
+	  Write-Host "2   Server"
+	  Write-Host "3   Client"
+	  Write-Host "4   Multiplexer"
+    }
+	if ($showRecorder) {
 	  Write-Host "5   Recorder"
 	}
 	if ($showRFS) {
 	  Write-Host "6   RFS"
 	}
     $selection = Read-Host "Enter a single number or CSV list of numbers for the programs you wish to install"
+
+    # Clear all the read prompt response for this script - do it here in case we exit the script early
+    Clear-History -Command "Read-Host"
+
 	foreach($singleSelection in $selection.split(",")) {
 	  if ($singleSelection.trim() -eq 1) { $installA = $true }
 	  if ($singleSelection.trim() -eq 2) { $installS = $true }
@@ -540,10 +598,31 @@ if ($confirmation -Match 'n') {
 	  if ($singleSelection.trim() -eq 6) { $installRFS = $true }
 	}
   } else {
-    $installA = $true
-    $installS = $true
-    $installC = $true
-    $installM = $true
+    if ($galleryRFS) {
+      $installA = $false
+      $installS = $false
+      $installC = $false
+      $installM = $false
+      $installR = $false
+      $installRFS = $true
+	}
+	else {
+      if ($galleryRecorder) {
+        $installA = $false
+        $installS = $false
+        $installC = $false
+        $installM = $false
+        $installR = $true
+        $installRFS = $false
+	  } else {
+        $installA = $true
+        $installS = $true
+        $installC = $true
+        $installM = $true
+        $installR = $false
+        $installR = $false
+      }
+	}
   }
 }
 
@@ -571,7 +650,7 @@ if ($installM -eq $true) {
   & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionM\$programWithPlatfomTVMExe" /silent /suppressmsgboxes | Out-Null
   if ($LastExitCode -ne 0) { Write-Host "Error"; return}
 }
-if ($testGallery) {
+if (($testGallery) -or ($galleryRecorder)) {
   if ($installR -eq $true) {
     Write-Host "Installing $selectedFlavour $programR $versionR"
     & "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName\$versionR\$programWithPlatfomRExe" /silent /suppressmsgboxes | Out-Null
