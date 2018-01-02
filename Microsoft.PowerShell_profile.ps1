@@ -946,6 +946,10 @@ function Get-RestartTimes() {
   Get-WinEvent @{logname='system'} | Where-Object { (($_.Id -eq 6005) -or ($_.Id -eq 6006) -or ($_.Id -eq 6008) -or ($_.Id -eq 6009)) } | Format-Table -Property TimeCreated, Message
 }
 
+function Get-NamedPipes() {
+  return [System.IO.Directory]::GetFiles("\\.\\pipe\\")
+}
+
 function sign ($filename) {
   $cert = @(gci cert:\currentuser\My -codesign)[0]
   Set-AuthenticodeSignature $filename $cert
