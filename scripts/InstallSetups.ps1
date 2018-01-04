@@ -69,6 +69,11 @@ $programTVMExe = $($localInfo.ProgramTVMExe)
 $programRExe = $($localInfo.ProgramRExe)
 $programRFSExe = $($localInfo.ProgramRFSExe)
 
+$processTVAName = $($localInfo.ProcessTVAName)
+$processTVSName = $($localInfo.ProcessTVSName)
+$processTVCName = $($localInfo.ProcessTVCName)
+$processTVMName = $($localInfo.ProcessTVMName)
+
 $programRInstallExe = $($localInfo.ProgramRInstallExe)
 
 $serviceProgramTVS = $($localInfo.ServiceProgramTVS)
@@ -628,34 +633,68 @@ if ($confirmation -Match 'n') {
 }
 
 if ($installA -eq $true) {
-  Write-Host "Installing $selectedFlavour $programTVA $versionA"
-  & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA\$versionA\$programWithPlatfomTVAExe" /silent /suppressmsgboxes | Out-Null
-  if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+  # Check if program is running
+  $processA = Get-Process | Where-Object { $_.Name -eq "$processTVAName" }
+  if ($processA.Name -ne "$processTVAName") {
+    Write-Host "Installing $selectedFlavour $programTVA $versionA"
+    & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVA\$versionA\$programWithPlatfomTVAExe" /silent /suppressmsgboxes | Out-Null
+    if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+  } else {
+    "Install aborted - $processTVAName already running"
+  }
 }
+
 if ($installS -eq $true) {
-  Write-Host "Stop $serviceProgramTVS (if installed)"
-  Stop-Service "$serviceProgramTVS" -ErrorAction "SilentlyContinue"
-  Write-Host "Set $serviceProgramTVS to manual start (if installed)"
-  Set-Service "$serviceProgramTVS" -startuptype "manual" -ErrorAction "SilentlyContinue"
-  Write-Host "Installing $selectedFlavour $programTVS $versionS"
-  & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$versionS\$programWithPlatfomTVSExe" /silent /suppressmsgboxes | Out-Null
-  if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+  # Check if program is running
+  $processS = Get-Process | Where-Object { $_.Name -eq "$processTVSName" }
+  if ($processS.Name -ne "$processTVSName") {
+    Write-Host "Stop $serviceProgramTVS (if installed)"
+    Stop-Service "$serviceProgramTVS" -ErrorAction "SilentlyContinue"
+    Write-Host "Set $serviceProgramTVS to manual start (if installed)"
+    Set-Service "$serviceProgramTVS" -startuptype "manual" -ErrorAction "SilentlyContinue"
+    Write-Host "Installing $selectedFlavour $programTVS $versionS"
+    & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$versionS\$programWithPlatfomTVSExe" /silent /suppressmsgboxes | Out-Null
+    if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+  } else {
+    "Install aborted - $processTVSName already running"
+  }
 }
+
 if ($installC -eq $true) {
-  Write-Host "Installing $selectedFlavour $programTVC $versionC"
-  & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$versionC\$programWithPlatfomTVCExe" /silent /suppressmsgboxes | Out-Null
-  if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+  # Check if program is running
+  $processC = Get-Process | Where-Object { $_.Name -eq "$processTVCName" }
+  if ($processC.Name -ne "$processTVCName") {
+    Write-Host "Installing $selectedFlavour $programTVC $versionC"
+    & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$versionC\$programWithPlatfomTVCExe" /silent /suppressmsgboxes | Out-Null
+    if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+  } else {
+    "Install aborted - $processTVCName already running"
+  }
 }
+
 if ($installM -eq $true) {
-  Write-Host "Installing $selectedFlavour $programTVM $versionM"
-  & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionM\$programWithPlatfomTVMExe" /silent /suppressmsgboxes | Out-Null
-  if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+  # Check if program is running
+  $processM = Get-Process | Where-Object { $_.Name -eq "$processTVMName" }
+  if ($processM.Name -ne "$processTVMName") {
+    Write-Host "Installing $selectedFlavour $programTVM $versionM"
+    & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionM\$programWithPlatfomTVMExe" /silent /suppressmsgboxes | Out-Null
+    if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+  } else {
+    "Install aborted - $processTVMName already running"
+  }
 }
+
 if (($testGallery) -or ($galleryRecorder)) {
   if ($installR -eq $true) {
-    Write-Host "Installing $selectedFlavour $programR $versionR"
-    & "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName\$versionR\$programWithPlatfomRExe" /silent /suppressmsgboxes | Out-Null
-    if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+    # Check if program is running
+    $processR = Get-Process | Where-Object { $_.Name -eq "$processTVRName" }
+    if ($processR.Name -ne "$processTVRName") {
+      Write-Host "Installing $selectedFlavour $programR $versionR"
+      & "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName\$versionR\$programWithPlatfomRExe" /silent /suppressmsgboxes | Out-Null
+      if ($LastExitCode -ne 0) { Write-Host "Error"; return}
+    } else {
+      "Install aborted - $processTVRName already running"
+    }
   }
 }
 if ($installRFS -eq $true) {
