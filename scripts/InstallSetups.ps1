@@ -1,3 +1,6 @@
+
+
+
 <#
 .SYNOPSIS
 Installs/uninstalls programs from official Gallery & TestGallery
@@ -32,6 +35,24 @@ Param($versionToInstall, [switch]$uninstallVersions, [switch]$gallery7, [switch]
 #   Flavour selection
 #   Selection of listed versions in TestGallery
 #   Listing of 7 versions in Gallery
+
+function IsProcessRunning($processName) {
+  # Check if program is running
+  $process = Get-Process | Where-Object { $_.Name -eq "$processName" }
+  if ($process.Name -ne "$processName") {
+    return $false
+  } else {
+    "$processName already running"
+    return $true
+  }
+}
+
+function StopRunningService($serviceProgram) {
+  Write-Host "Stop $serviceProgram (if installed)"
+  Stop-Service "$serviceProgram" -ErrorAction "SilentlyContinue"
+  Write-Host "Set $serviceProgram to manual start (if installed)"
+  Set-Service "$serviceProgram" -startuptype "manual" -ErrorAction "SilentlyContinue"
+}
 
 # Load data
 "Loading data..."
@@ -132,76 +153,106 @@ $releaseFolderName = "Release\" # for RFS
 if ($uninstallVersions) {
   # Admin x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderA\unins000.exe") {
-    Write-Host "Uninstall $programTVA (x86)"
-    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderA\unins000.exe"
+    if (!(IsProcessRunning($processTVAName))) {
+      Write-Host "Uninstall $programTVA (x86)"
+      & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderA\unins000.exe"
+	}
   }
   # Admin x64
   if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderA\unins000.exe") {
-    Write-Host "Uninstall $programTVA (x64)"
-    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderA\unins000.exe"
+    if (!(IsProcessRunning($processTVAName))) {
+      Write-Host "Uninstall $programTVA (x64)"
+      & "C:\Program Files\$programFilesParentFolder\$programFilesFolderA\unins000.exe"
+    }
   }
   # Server x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderS\unins000.exe") {
-    Write-Host "Uninstall $programTVS"
-    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderS\unins000.exe"
+    StopRunningService($serviceProgramTVS)
+    if (!(IsProcessRunning($processTVSName))) {
+      Write-Host "Uninstall $programTVS"
+      & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderS\unins000.exe"
+    }
   }
   # Server x64
   if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderS\unins000.exe") {
-    Write-Host "Uninstall $programTVS (x64)"
-    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderS\unins000.exe"
+    StopRunningService($serviceProgramTVS)
+    if (!(IsProcessRunning($processTVSName))) {
+      Write-Host "Uninstall $programTVS (x64)"
+      & "C:\Program Files\$programFilesParentFolder\$programFilesFolderS\unins000.exe"
+    }
   }
   # Client x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderC\unins000.exe") {
-    Write-Host "Uninstall $programTVC (x86)"
-    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderC\unins000.exe"
+    if (!(IsProcessRunning($processTVCName))) {
+      Write-Host "Uninstall $programTVC (x86)"
+      & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderC\unins000.exe"
+    }
   }
   # Client x64
   if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderC\unins000.exe") {
-    Write-Host "Uninstall $programTVC (x64)"
-    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderC\unins000.exe"
+    if (!(IsProcessRunning($processTVCName))) {
+      Write-Host "Uninstall $programTVC (x64)"
+      & "C:\Program Files\$programFilesParentFolder\$programFilesFolderC\unins000.exe"
+    }
   }
   $programTVC7 = $programTVC + "7"
   # Client7 x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderC7\unins000.exe") {
-    Write-Host "Uninstall $programTVC7 (x86)"
-    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderC7\unins000.exe"
+    if (!(IsProcessRunning($processTVCName))) {
+      Write-Host "Uninstall $programTVC7 (x86)"
+      & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderC7\unins000.exe"
+    }
   }
   # Client7 x64
   if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderC7\unins000.exe") {
-    Write-Host "Uninstall $programTVC7 (x64)"
-    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderC7\unins000.exe"
+    if (!(IsProcessRunning($processTVCName))) {
+      Write-Host "Uninstall $programTVC7 (x64)"
+      & "C:\Program Files\$programFilesParentFolder\$programFilesFolderC7\unins000.exe"
+    }
   }
   # Multiplexer x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM\unins000.exe") {
-    Write-Host "Uninstall $programTVM (x86)"
-    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM\unins000.exe"
+    if (!(IsProcessRunning($processTVMName))) {
+      Write-Host "Uninstall $programTVM (x86)"
+      & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM\unins000.exe"
+    }
   }
   # Multiplexer x64
   if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderM\unins000.exe") {
-    Write-Host "Uninstall $programTVM (x64)"
-    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM\unins000.exe"
+    if (!(IsProcessRunning($processTVMName))) {
+      Write-Host "Uninstall $programTVM (x64)"
+      & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM\unins000.exe"
+    }
   }
   $programTVM7 = $programTVM + "7"
   # Multiplexer7 x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM7\unins000.exe") {
-    Write-Host "Uninstall $programTVM7 (x86)"
-    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM7\unins000.exe"
+    if (!(IsProcessRunning($processTVMName))) {
+      Write-Host "Uninstall $programTVM7 (x86)"
+      & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderM7\unins000.exe"
+    }
   }
   # Multiplexer7 x64
   if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderM7\unins000.exe") {
-    Write-Host "Uninstall $programTVM7 (x64)"
-    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderM7\unins000.exe"
+    if (!(IsProcessRunning($processTVMName))) {
+      Write-Host "Uninstall $programTVM7 (x64)"
+      & "C:\Program Files\$programFilesParentFolder\$programFilesFolderM7\unins000.exe"
+    }
   }
 
   # Recorder x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderR\unins000.exe") {
-    Write-Host "Uninstall $programR (x86)"
-    & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderR\unins000.exe"
+    if (!(IsProcessRunning($processTVRName))) {
+      Write-Host "Uninstall $programR (x86)"
+      & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderR\unins000.exe"
+    }
   }
   # Recorder x64
   if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderR\unins000.exe") {
-    Write-Host "Uninstall $programR (x64)"
-    & "C:\Program Files\$programFilesParentFolder\$programFilesFolderR\unins000.exe"
+    if (!(IsProcessRunning($processTVRName))) {
+      Write-Host "Uninstall $programR (x64)"
+      & "C:\Program Files\$programFilesParentFolder\$programFilesFolderR\unins000.exe"
+    }
   }
 
   # RFS x86
@@ -645,13 +696,8 @@ if ($installA -eq $true) {
 }
 
 if ($installS -eq $true) {
-  # Check if program is running
-  $processS = Get-Process | Where-Object { $_.Name -eq "$processTVSName" }
-  if ($processS.Name -ne "$processTVSName") {
-    Write-Host "Stop $serviceProgramTVS (if installed)"
-    Stop-Service "$serviceProgramTVS" -ErrorAction "SilentlyContinue"
-    Write-Host "Set $serviceProgramTVS to manual start (if installed)"
-    Set-Service "$serviceProgramTVS" -startuptype "manual" -ErrorAction "SilentlyContinue"
+  StopRunningService($serviceProgramTVS)
+  if (!(IsProcessRunning($processTVSName))) {
     Write-Host "Installing $selectedFlavour $programTVS $versionS"
     & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$versionS\$programWithPlatfomTVSExe" /silent /suppressmsgboxes | Out-Null
     if ($LastExitCode -ne 0) { Write-Host "Error"; return}
@@ -661,9 +707,7 @@ if ($installS -eq $true) {
 }
 
 if ($installC -eq $true) {
-  # Check if program is running
-  $processC = Get-Process | Where-Object { $_.Name -eq "$processTVCName" }
-  if ($processC.Name -ne "$processTVCName") {
+  if (!(IsProcessRunning($processTVCName))) {
     Write-Host "Installing $selectedFlavour $programTVC $versionC"
     & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVC\$versionC\$programWithPlatfomTVCExe" /silent /suppressmsgboxes | Out-Null
     if ($LastExitCode -ne 0) { Write-Host "Error"; return}
@@ -673,9 +717,7 @@ if ($installC -eq $true) {
 }
 
 if ($installM -eq $true) {
-  # Check if program is running
-  $processM = Get-Process | Where-Object { $_.Name -eq "$processTVMName" }
-  if ($processM.Name -ne "$processTVMName") {
+  if (!(IsProcessRunning($processTVMName))) {
     Write-Host "Installing $selectedFlavour $programTVM $versionM"
     & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVM\$versionM\$programWithPlatfomTVMExe" /silent /suppressmsgboxes | Out-Null
     if ($LastExitCode -ne 0) { Write-Host "Error"; return}
@@ -686,9 +728,7 @@ if ($installM -eq $true) {
 
 if (($testGallery) -or ($galleryRecorder)) {
   if ($installR -eq $true) {
-    # Check if program is running
-    $processR = Get-Process | Where-Object { $_.Name -eq "$processTVRName" }
-    if ($processR.Name -ne "$processTVRName") {
+    if (!(IsProcessRunning($processTVRName))) {
       Write-Host "Installing $selectedFlavour $programR $versionR"
       & "$galleryDir\$programR\$parentVersion$selectedFlavourFolderName\$versionR\$programWithPlatfomRExe" /silent /suppressmsgboxes | Out-Null
       if ($LastExitCode -ne 0) { Write-Host "Error"; return}
