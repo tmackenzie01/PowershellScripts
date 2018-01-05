@@ -47,11 +47,15 @@ function IsProcessRunning($processName) {
   }
 }
 
-function StopRunningService($serviceProgram) {
+function StopAndRemoveRunningService($serviceProgram) {
   Write-Host "Stop $serviceProgram (if installed)"
   Stop-Service "$serviceProgram" -ErrorAction "SilentlyContinue"
   Write-Host "Set $serviceProgram to manual start (if installed)"
   Set-Service "$serviceProgram" -startuptype "manual" -ErrorAction "SilentlyContinue"
+  $serv = Get-Service "$serviceProgram" -ErrorAction "SilentlyContinue"
+  if ($serv -ne $null) {
+    sc.exe delete "$serviceProgram"
+  }
 }
 
 # Load data
@@ -98,6 +102,7 @@ $processTVMName = $($localInfo.ProcessTVMName)
 $programRInstallExe = $($localInfo.ProgramRInstallExe)
 
 $serviceProgramTVS = $($localInfo.ServiceProgramTVS)
+$serviceProgramTVR = $($localInfo.ServiceProgramTVR)
 
 $programFilesParentFolder = $($localInfo.ProgramFilesParentFolder)
 $programFilesFolderA = $($localInfo.ProgramFilesFolderA)
@@ -167,7 +172,7 @@ if ($uninstallVersions) {
   }
   # Server x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderS\unins000.exe") {
-    StopRunningService($serviceProgramTVS)
+    StopAndRemoveRunningService($serviceProgramTVS)
     if (!(IsProcessRunning($processTVSName))) {
       Write-Host "Uninstall $programTVS"
       & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderS\unins000.exe"
@@ -175,7 +180,7 @@ if ($uninstallVersions) {
   }
   # Server x64
   if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderS\unins000.exe") {
-    StopRunningService($serviceProgramTVS)
+    StopAndRemoveRunningService($serviceProgramTVS)
     if (!(IsProcessRunning($processTVSName))) {
       Write-Host "Uninstall $programTVS (x64)"
       & "C:\Program Files\$programFilesParentFolder\$programFilesFolderS\unins000.exe"
@@ -242,6 +247,7 @@ if ($uninstallVersions) {
 
   # Recorder x86
   if (Test-Path "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderR\unins000.exe") {
+    StopAndRemoveRunningService($serviceProgramTVR)
     if (!(IsProcessRunning($processTVRName))) {
       Write-Host "Uninstall $programR (x86)"
       & "C:\Program Files (x86)\$programFilesParentFolder\$programFilesFolderR\unins000.exe"
@@ -249,6 +255,7 @@ if ($uninstallVersions) {
   }
   # Recorder x64
   if (Test-Path "C:\Program Files\$programFilesParentFolder\$programFilesFolderR\unins000.exe") {
+    StopAndRemoveRunningService($serviceProgramTVR)
     if (!(IsProcessRunning($processTVRName))) {
       Write-Host "Uninstall $programR (x64)"
       & "C:\Program Files\$programFilesParentFolder\$programFilesFolderR\unins000.exe"
@@ -696,7 +703,7 @@ if ($installA -eq $true) {
 }
 
 if ($installS -eq $true) {
-  StopRunningService($serviceProgramTVS)
+  StopAndRemoveRunningService($serviceProgramTVS)
   if (!(IsProcessRunning($processTVSName))) {
     Write-Host "Installing $selectedFlavour $programTVS $versionS"
     & "$galleryDir\$programTV\$parentVersion$selectedFlavourFolderName$programTVS\$versionS\$programWithPlatfomTVSExe" /silent /suppressmsgboxes | Out-Null
