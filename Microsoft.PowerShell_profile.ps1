@@ -500,7 +500,7 @@ function Tsql-List-Databases([switch] $verbose, [switch] $quick) {
   }
 }
 
-function Tsql-Backup-Database() {
+function Tsql-Backup-Database($name) {
   $dbV = $dbInfo.dbV
   
   # backup up database to a folder called automatic backups
@@ -509,12 +509,23 @@ function Tsql-Backup-Database() {
   $versionNumber = sqlcmd -S lpc:$pcName\SQLEXPRESS -d $($dbInfo.DatabaseName) -Q "SET NOCOUNT ON;SELECT major_number, minor_number, revision FROM $dbV WHERE is_current=1;SET NOCOUNT OFF" -W -h -1
   $versionNumber = $versionNumber -replace " ","."
   $tag = $versionNumber + "_" + $date
-  
-  $backupFile = "$($dbInfo.DatabaseName)_$tag.bak"
+
+  if ([string]::IsNullOrEmpty($name)) {
+    $backupFile = "$($dbInfo.DatabaseName)_$tag.bak"
+  } else {
+    if (!($name.EndsWith(".bak"))) {
+      $backupFile = $name + ".bak"
+    } else {
+      $backupFile = $name
+    }
+  }
+
   $backupLocation = "$tsqlAutomaticBackupLocation\$backupFile"
   $backUpName = "$($dbInfo.DatabaseName) backup"
   Write-Host "Backing up to $backupFile"
   Tsql "BACKUP DATABASE $($dbInfo.DatabaseName) TO DISK = '$backupLocation' WITH FORMAT, MEDIANAME = 'MyBackups', NAME = '$backupName'"
+
+  "Backup created $backupLocation"
 }
 
 function Tsql-Shrink-Database() {
