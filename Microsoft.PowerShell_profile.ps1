@@ -72,6 +72,25 @@ function prompt
     return "> "
 }
 
+function New-Powershell([switch] $close) {
+  & "C:\Users\thomas\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Windows PowerShell\Windows PowerShell.lnk"
+  $closeThis = $false
+  if ($close) {
+    $closeThis = $true
+  } else {
+    $confirmation = Read-Host "You done with this powershell session? (y/n)"
+	if ($confirmation -Match 'y') {
+	"YES"
+	  $closeThis = $true
+	}
+  }
+
+  if ($closeThis -eq $true) {
+    Read-Host "exiting "
+    exit
+  }
+}
+
   # Opens up or creates a script file for the specified $script file
 function Get-Args($script) {
   # test.ps1 -> ${env:ProgramData}\WindowsPowerShell includes\test_args.json
